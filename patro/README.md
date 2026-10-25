@@ -7,6 +7,9 @@ Patro. Not affiliated with Hamro Patro.
 - Tithi, paksha and lunar month for each day, computed for Kathmandu
 - Festivals set by the lunar calendar: Dashain, Tihar, Chhath, Teej, Holi,
   Janai Purnima, Shivaratri, Buddha Jayanti and more
+- Daily rashifal for all twelve rashis, from the Moon's transit
+- Foreign exchange rates from Nepal Rastra Bank, gold and silver prices from
+  FENEGOSIDA (in the Android app; see below)
 - BS ↔ AD date converter
 - Fixed-date national days (New Year, Republic Day, Constitution Day, ...)
 - Nepali and English, light and dark themes, Nepal Time clock
@@ -20,6 +23,30 @@ folder:
 npm start   # http://localhost:8080
 npm test    # Node 18+
 ```
+
+## Android app
+
+`android/` wraps the same files in a small native app (52 KB). Its native
+code fetches the forex and gold rates, which a browser page can't load
+because of CORS (the source sites don't allow it). Build it on
+Debian/Ubuntu with no Android Studio or SDK download:
+
+```bash
+sudo apt-get install aapt dalvik-exchange zipalign apksigner android-sdk-platform-23
+android/build-apk.sh   # writes android/build/patro.apk
+```
+
+The first build creates a signing key in `android/keystore/`, which is not
+committed. Keep it: Android only installs an update signed with the same key.
+
+## iPhone
+
+An iOS app has to be built and signed on a Mac with Xcode. Instead, Patro
+installs from Safari as a web app: serve this folder over HTTPS (GitHub
+Pages works), open it on the iPhone, then Share → Add to Home Screen. It
+gets its own icon, opens full screen and works offline (`sw.js`). Forex and
+gold rates show links to their sources there, since iOS Safari blocks the
+requests too.
 
 ## How it works
 
@@ -39,11 +66,17 @@ npm test    # Node 18+
   Shivaratri. The tests check 21 festival dates observed in Nepal in 2024
   and 2025, and that every BS month in the table starts at its sankranti.
 - `lib/events.js`: observances on a fixed BS or AD date.
+- `lib/rashifal.js`: the Moon's sidereal sign at sunrise and the house it
+  occupies from each rashi; houses 1, 3, 6, 7, 10, 11 read as favourable,
+  4, 8, 12 as unfavourable, 2, 5, 9 as mixed.
+- `lib/rates.js`: the NRB forex API and the FENEGOSIDA home page, with the
+  last good result kept for offline use. FENEGOSIDA has no API, so its
+  prices are read from the page text; if the site changes its layout the
+  app shows a link to the site instead of a wrong number.
 
 ## Not included yet
 
 - Government public holidays, which are announced each year.
-- Live data such as rashifal, forex or gold prices.
 
 In a year when a tithi changes close to the time a festival is judged, the
 festival can land a day off from a printed panchang.

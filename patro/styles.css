@@ -10,6 +10,10 @@
   --blue: #003893;
   --today-ring: #003893;
   --holiday: #c8102e;
+  --good: #1e7a45;
+  --good-soft: #e3f3e9;
+  --mixed: #8a5a00;
+  --mixed-soft: #fbf0d9;
   --shadow: 0 1px 2px rgba(29, 27, 25, 0.06), 0 4px 16px rgba(29, 27, 25, 0.05);
   --radius: 14px;
   --font: "Mukta", "Noto Sans Devanagari", "Nirmala UI", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -28,6 +32,10 @@
     --blue: #8fb0ff;
     --today-ring: #8fb0ff;
     --holiday: #ff6b7d;
+    --good: #6fd39a;
+    --good-soft: #1c3326;
+    --mixed: #f0c36a;
+    --mixed-soft: #3a3020;
     --shadow: none;
     color-scheme: dark;
   }
@@ -45,6 +53,10 @@
   --blue: #8fb0ff;
   --today-ring: #8fb0ff;
   --holiday: #ff6b7d;
+  --good: #6fd39a;
+  --good-soft: #1c3326;
+  --mixed: #f0c36a;
+  --mixed-soft: #3a3020;
   --shadow: none;
   color-scheme: dark;
 }
@@ -223,6 +235,50 @@ button:focus-visible, select:focus-visible, input:focus-visible, .day:focus-visi
 }
 .event-list .empty { color: var(--muted); font-size: 0.9rem; }
 
+/* Rashifal, forex and gold */
+.extras {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 24px;
+  align-items: start;
+}
+.extras .rashifal { grid-column: 1 / -1; }
+.card-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 12px; }
+.card-head h2 { margin: 0; }
+.card-head p { margin: 0; }
+.muted { color: var(--muted); font-size: 0.9rem; }
+.fineprint { margin: 12px 0 0; color: var(--muted); font-size: 0.8rem; }
+
+.rashi-grid {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;
+}
+.rashi {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2);
+}
+.rashi-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rashi-name { font-weight: 700; }
+.rashi p { margin: 0; font-size: 0.9rem; }
+.tone { border-radius: 999px; padding: 1px 9px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+.tone.good { background: var(--good-soft); color: var(--good); }
+.tone.mixed { background: var(--mixed-soft); color: var(--mixed); }
+.tone.bad { background: var(--accent-soft); color: var(--holiday); }
+
+.rates-scroll { overflow-x: auto; }
+.rates-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.rates-table th, .rates-table td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--border); }
+.rates-table th:first-child, .rates-table td:first-child { text-align: left; }
+.rates-table th { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+.rates-table .unit { color: var(--muted); font-size: 0.8rem; margin-left: 4px; }
+.link-btn { margin-top: 10px; border: 0; background: none; color: var(--blue); padding: 0; cursor: pointer; text-decoration: underline; }
+.gold-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.gold-list li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.gold-list .price { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.notice { margin: 0; font-size: 0.9rem; }
+.notice a { color: var(--blue); }
+
 .footer {
   max-width: 1180px; margin: 0 auto 32px;
   padding-left: max(24px, env(safe-area-inset-left, 0px));
@@ -232,6 +288,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, .day:focus-visi
 
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
+  .extras { grid-template-columns: 1fr; gap: 16px; }
 }
 
 @media (max-width: 600px) {

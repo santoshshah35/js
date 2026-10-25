@@ -5,6 +5,12 @@
   var Tithi = window.PatroTithi;
   var Events = window.PatroEvents;
   var Lunar = window.PatroLunar;
+  var Rashifal = window.PatroRashifal;
+  var Rates = window.PatroRates;
+
+  // Shown first in the forex table, in this order; the rest follow.
+  var MAIN_CURRENCIES = ["USD", "EUR", "GBP", "INR", "AUD", "CAD", "JPY", "CNY",
+    "SAR", "QAR", "AED", "MYR", "KRW", "KWD"];
 
   var AD_MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var AD_MONTHS_NE = ["जनवरी", "फेब्रुअरी", "मार्च", "अप्रिल", "मे", "जुन", "जुलाई", "अगस्ट",
@@ -24,6 +30,32 @@
       events: "यस महिनाका चाडपर्व र दिवसहरू",
       noEvents: "यस महिनामा कुनै चाडपर्व वा दिवस छैन।",
       lunarMonth: "चन्द्र मास",
+      rashifal: "राशिफल",
+      moonIn: "चन्द्रमा {sign} राशिमा",
+      moonMoves: "{time} बजे {sign}मा प्रवेश",
+      good: "शुभ",
+      mixed: "मिश्रित",
+      bad: "सावधान",
+      rashifalNote: "चन्द्रमाको गोचरका आधारमा परम्परागत सामान्य फल। व्यक्तिगत कुण्डलीको फल होइन।",
+      forex: "विदेशी विनिमय दर",
+      currency: "मुद्रा",
+      buy: "खरिद",
+      sell: "बिक्री",
+      showAll: "सबै मुद्रा देखाउनुहोस्",
+      showFewer: "कम देखाउनुहोस्",
+      gold: "सुन चाँदी",
+      fineGold: "छापावाल सुन",
+      tejabiGold: "तेजाबी सुन",
+      silver: "चाँदी",
+      perTola: "प्रति तोला",
+      loading: "लोड हुँदैछ…",
+      publishedOn: "प्रकाशित {date}",
+      savedCopy: "इन्टरनेट नभएकाले {date} मा सुरक्षित गरिएको दर",
+      forexError: "यहाँबाट दर लोड गर्न सकिएन। नेपाल राष्ट्र बैंकको वेबसाइटमा हेर्नुहोस्:",
+      goldError: "यहाँबाट मूल्य लोड गर्न सकिएन। महासंघको वेबसाइटमा हेर्नुहोस्:",
+      appHint: "Patro एन्ड्रोइड एपमा यी दर आफैं लोड हुन्छन्।",
+      goldSource: "स्रोत: नेपाल सुनचाँदी व्यवसायी महासंघ",
+      forexSource: "स्रोत: नेपाल राष्ट्र बैंक",
       sunrise: "सूर्योदय",
       saturday: "सार्वजनिक बिदा (शनिबार)",
       bs: "बि.सं.",
@@ -41,6 +73,32 @@
       events: "Festivals and national days this month",
       noEvents: "No festivals or national days this month.",
       lunarMonth: "Lunar month",
+      rashifal: "Rashifal",
+      moonIn: "Moon in {sign}",
+      moonMoves: "enters {sign} at {time}",
+      good: "Good",
+      mixed: "Mixed",
+      bad: "Careful",
+      rashifalNote: "General readings from the Moon's transit (gochar), the traditional rule of thumb. Not a personal horoscope.",
+      forex: "Exchange rates",
+      currency: "Currency",
+      buy: "Buy",
+      sell: "Sell",
+      showAll: "Show all currencies",
+      showFewer: "Show fewer",
+      gold: "Gold and silver",
+      fineGold: "Fine gold (24K)",
+      tejabiGold: "Tejabi gold",
+      silver: "Silver",
+      perTola: "per tola",
+      loading: "Loading…",
+      publishedOn: "Published {date}",
+      savedCopy: "Offline: rates saved on {date}",
+      forexError: "Couldn't load rates here. See Nepal Rastra Bank:",
+      goldError: "Couldn't load prices here. See FENEGOSIDA:",
+      appHint: "The Patro Android app loads these rates automatically.",
+      goldSource: "Source: Federation of Nepal Gold and Silver Dealers' Association",
+      forexSource: "Source: Nepal Rastra Bank",
       sunrise: "Sunrise",
       saturday: "Weekly holiday (Saturday)",
       bs: "BS",
@@ -330,6 +388,168 @@
     }
   }
 
+  // ---- Rashifal ----
+
+  function fill(template, values) {
+    return template.replace(/\{(\w+)\}/g, function (_, k) { return values[k]; });
+  }
+
+  function renderRashifal() {
+    var day = Rashifal.rashifalOn(state.selected);
+    var moon = day.moon;
+    var sign = pick(Rashifal.RASHIS[moon.sign]);
+    var line = fill(t("moonIn"), { sign: sign });
+    if (moon.changesAt) {
+      line += ", " + fill(t("moonMoves"), {
+        sign: pick(Rashifal.RASHIS[moon.next]),
+        time: nepalTimeString(moon.changesAt)
+      });
+    }
+    $("rashifal-title").textContent = t("rashifal") + " · " + formatBs(BS.dayNumberToBs(state.selected));
+    $("rashifal-moon").textContent = line;
+    $("rashifal-note").textContent = t("rashifalNote");
+
+    var grid = $("rashi-grid");
+    clearChildren(grid);
+    day.readings.forEach(function (r) {
+      var li = el("li", "rashi");
+      var top = el("div", "rashi-top");
+      top.appendChild(el("span", "rashi-name", pick(r.rashi)));
+      top.appendChild(el("span", "tone " + r.tone, t(r.tone)));
+      li.appendChild(top);
+      li.appendChild(el("p", null, pick(r)));
+      grid.appendChild(li);
+    });
+  }
+
+  // ---- Forex and gold ----
+
+  var rates = { forex: null, gold: null, showAll: false };
+
+  function money(n, decimals) {
+    var text = n.toLocaleString("en-IN", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    return num(text);
+  }
+
+  function dateText(ms) {
+    var n = Math.floor((ms + (5 * 60 + 45) * 60000) / 86400000);
+    return formatBs(BS.dayNumberToBs(n));
+  }
+
+  function sourceLink(href) {
+    var a = el("a", null, href.replace(/^https:\/\//, "").replace(/\/$/, ""));
+    a.href = href;
+    a.target = "_blank";
+    a.rel = "noopener";
+    return a;
+  }
+
+  function renderError(box, message, href) {
+    var p = el("p", "notice", message + " ");
+    p.appendChild(sourceLink(href));
+    box.appendChild(p);
+    if (!window.PatroNative) box.appendChild(el("p", "fineprint", t("appHint")));
+  }
+
+  function renderForex() {
+    $("forex-title").textContent = t("forex");
+    var box = $("forex-body");
+    var meta = $("forex-meta");
+    clearChildren(box);
+    var f = rates.forex;
+    if (!f) { meta.textContent = t("loading"); return; }
+    if (f.error) {
+      meta.textContent = "";
+      renderError(box, t("forexError"), Rates.NRB_PAGE);
+      return;
+    }
+    var parts = f.data.date.split("-").map(Number);
+    var published = formatBs(BS.toBS(parts[0], parts[1], parts[2]));
+    meta.textContent = f.cachedAt
+      ? fill(t("savedCopy"), { date: dateText(f.cachedAt) })
+      : fill(t("publishedOn"), { date: published });
+
+    var list = f.data.rates.slice().sort(function (a, b) {
+      var ia = MAIN_CURRENCIES.indexOf(a.iso3), ib = MAIN_CURRENCIES.indexOf(b.iso3);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    });
+    var shown = rates.showAll ? list : list.slice(0, 8);
+
+    var wrap = el("div", "rates-scroll");
+    var table = el("table", "rates-table");
+    var head = el("tr");
+    [t("currency"), t("buy"), t("sell")].forEach(function (h) {
+      var th = el("th", null, h);
+      th.scope = "col";
+      head.appendChild(th);
+    });
+    var thead = el("thead");
+    thead.appendChild(head);
+    table.appendChild(thead);
+    var tbody = el("tbody");
+    shown.forEach(function (r) {
+      var tr = el("tr");
+      var name = el("td");
+      name.title = r.name;
+      name.appendChild(document.createTextNode(r.iso3));
+      name.appendChild(el("span", "unit", num(r.unit)));
+      tr.appendChild(name);
+      tr.appendChild(el("td", null, money(r.buy, 2)));
+      tr.appendChild(el("td", null, money(r.sell, 2)));
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    box.appendChild(wrap);
+
+    if (list.length > 8) {
+      var toggle = el("button", "link-btn", rates.showAll ? t("showFewer") : t("showAll"));
+      toggle.type = "button";
+      toggle.addEventListener("click", function () {
+        rates.showAll = !rates.showAll;
+        renderForex();
+      });
+      box.appendChild(toggle);
+    }
+    box.appendChild(el("p", "fineprint", t("forexSource")));
+  }
+
+  function renderGold() {
+    $("gold-title").textContent = t("gold");
+    var box = $("gold-body");
+    var meta = $("gold-meta");
+    clearChildren(box);
+    var g = rates.gold;
+    if (!g) { meta.textContent = t("loading"); return; }
+    if (g.error) {
+      meta.textContent = "";
+      renderError(box, t("goldError"), Rates.GOLD_URL);
+      return;
+    }
+    meta.textContent = g.cachedAt ? fill(t("savedCopy"), { date: dateText(g.cachedAt) }) : t("perTola");
+    var ul = el("ul", "gold-list");
+    [["fineGold", g.data.fineGold], ["tejabiGold", g.data.tejabiGold], ["silver", g.data.silver]].forEach(function (row) {
+      if (row[1] === null) return;
+      var li = el("li");
+      li.appendChild(el("span", null, t(row[0])));
+      li.appendChild(el("span", "price", "रु " + money(row[1], 0)));
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+    box.appendChild(el("p", "fineprint", t("goldSource")));
+  }
+
+  function loadRates() {
+    Rates.loadForex(BS.nepalToday())
+      .then(function (r) { rates.forex = r; })
+      .catch(function () { rates.forex = { error: true }; })
+      .then(renderForex);
+    Rates.loadGold()
+      .then(function (r) { rates.gold = r; })
+      .catch(function () { rates.gold = { error: true }; })
+      .then(renderGold);
+  }
+
   // ---- Navigation ----
 
   function selectDay(n) {
@@ -344,6 +564,7 @@
     }
     renderCalendar();
     renderDetail();
+    renderRashifal();
   }
 
   function showMonth(year, month) {
@@ -362,8 +583,20 @@
     renderCalendar();
     renderDetail();
     renderConverterLabels();
+    renderRashifal();
+    renderForex();
+    renderGold();
     $("footer-note").textContent = t("footer");
     tickClock();
+  }
+
+  // Lets the installed web app (iPhone "Add to Home Screen") open offline.
+  // Service workers need HTTPS; the Android app and file:// pages skip this.
+  function registerOfflineSupport() {
+    if (window.PatroNative || !("serviceWorker" in navigator) || (location.protocol !== "https:" && location.hostname !== "localhost")) return;
+    try {
+      navigator.serviceWorker.register("sw.js").catch(function () { /* runs without offline support */ });
+    } catch (e) { /* runs without offline support */ }
   }
 
   function init() {
@@ -374,6 +607,8 @@
     state.selected = today;
     renderAll();
     setConverterMode("bs2ad");
+    loadRates();
+    registerOfflineSupport();
 
     $("prev-month").addEventListener("click", function () { showMonth(state.year, state.month - 1); });
     $("next-month").addEventListener("click", function () { showMonth(state.year, state.month + 1); });

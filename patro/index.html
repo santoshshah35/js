@@ -3,8 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Nepali Bikram Sambat calendar with tithi, festivals, date converter and national days.">
+  <meta name="description" content="Nepali Bikram Sambat calendar with tithi, festivals, rashifal, forex and gold rates, and a date converter.">
   <title>Patro</title>
+  <meta name="theme-color" content="#c8102e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Patro">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700&display=swap">
@@ -72,6 +79,33 @@
         <ul class="event-list" id="event-list"></ul>
       </section>
     </aside>
+
+    <div class="extras">
+      <section class="card rashifal" aria-labelledby="rashifal-title">
+        <div class="card-head">
+          <h2 id="rashifal-title"></h2>
+          <p class="muted" id="rashifal-moon"></p>
+        </div>
+        <ul class="rashi-grid" id="rashi-grid"></ul>
+        <p class="fineprint" id="rashifal-note"></p>
+      </section>
+
+      <section class="card" aria-labelledby="forex-title">
+        <div class="card-head">
+          <h2 id="forex-title"></h2>
+          <p class="muted" id="forex-meta"></p>
+        </div>
+        <div id="forex-body"></div>
+      </section>
+
+      <section class="card" aria-labelledby="gold-title">
+        <div class="card-head">
+          <h2 id="gold-title"></h2>
+          <p class="muted" id="gold-meta"></p>
+        </div>
+        <div id="gold-body"></div>
+      </section>
+    </div>
   </main>
 
   <footer class="footer">
@@ -83,6 +117,8 @@
   <script src="lib/tithi.js"></script>
   <script src="lib/events.js"></script>
   <script src="lib/lunar.js"></script>
+  <script src="lib/rashifal.js"></script>
+  <script src="lib/rates.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

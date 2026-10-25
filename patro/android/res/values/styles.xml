@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Patro</string>
+
+    <!-- Light theme; values-night/styles.xml swaps in the dark one, and the
+         WebView passes the choice on to the page as prefers-color-scheme. -->
+    <style name="AppTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">#C8102E</item>
+        <item name="android:colorAccent">#003893</item>
+        <item name="android:statusBarColor">#FFFFFF</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+</resources>

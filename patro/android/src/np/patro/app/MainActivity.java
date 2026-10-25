@@ -1,0 +1,152 @@
+package np.patro.app;
+
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * Shows the Patro web app bundled in assets/www and gives it a small native
+ * HTTP bridge for the forex and gold rates, which browsers would block.
+ */
+public class MainActivity extends Activity {
+
+    private static final String START_URL = "file:///android_asset/www/index.html";
+    private static final Set<String> ALLOWED_HOSTS = new HashSet<String>(Arrays.asList(
+            "www.nrb.org.np", "nrb.org.np", "www.fenegosida.org", "fenegosida.org"));
+    private static final int MAX_BYTES = 2 * 1024 * 1024;
+
+    private final ExecutorService pool = Executors.newFixedThreadPool(2);
+    private final Handler main = new Handler(Looper.getMainLooper());
+    private WebView web;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        web = new WebView(this);
+        setContentView(web);
+
+        WebSettings settings = web.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setAllowFileAccess(false);
+        settings.setAllowContentAccess(false);
+
+        web.addJavascriptInterface(new Bridge(), "PatroNative");
+        web.setWebViewClient(new WebViewClient() {
+            @Override
+            @SuppressWarnings("deprecation")
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url.startsWith("file:///android_asset/")) return false;
+                // Links to other sites open in the browser, not inside the app.
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                } catch (ActivityNotFoundException e) {
+                    // No app can open the link; stay on the calendar.
+                }
+                return true;
+            }
+        });
+
+        if (savedInstanceState != null) web.restoreState(savedInstanceState);
+        else web.loadUrl(START_URL);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        web.saveState(outState);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (web.canGoBack()) web.goBack();
+        else super.onBackPressed();
+    }
+
+    @Override
+    protected void onDestroy() {
+        pool.shutdownNow();
+        web.destroy();
+        super.onDestroy();
+    }
+
+    /** Called from lib/rates.js as PatroNative.httpGet(id, url). */
+    private final class Bridge {
+        @JavascriptInterface
+        public void httpGet(final String id, final String url) {
+            pool.execute(new Runnable() {
+                @Override
+                public void run() {
+                    String body;
+                    boolean ok;
+                    try {
+                        body = fetch(url);
+                        ok = true;
+                    } catch (Exception e) {
+                        body = String.valueOf(e.getMessage());
+                        ok = false;
+                    }
+                    deliver(id, ok, body);
+                }
+            });
+        }
+    }
+
+    private static String fetch(String address) throws Exception {
+        URL url = new URL(address);
+        if (!"https".equals(url.getProtocol()) || !ALLOWED_HOSTS.contains(url.getHost())) {
+            throw new SecurityException("Host not allowed: " + url.getHost());
+        }
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        try {
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(20000);
+            conn.setRequestProperty("User-Agent", "Patro/1.0 (Android)");
+            int code = conn.getResponseCode();
+            if (code != 200) throw new Exception("HTTP " + code);
+            InputStream in = conn.getInputStream();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) != -1) {
+                out.write(buf, 0, n);
+                if (out.size() > MAX_BYTES) throw new Exception("Response too large");
+            }
+            in.close();
+            return out.toString("UTF-8");
+        } finally {
+            conn.disconnect();
+        }
+    }
+
+    private void deliver(final String id, final boolean ok, final String body) {
+        final String js = "window.__patroNativeDone && window.__patroNativeDone("
+                + JSONObject.quote(id) + "," + ok + "," + JSONObject.quote(body) + ")";
+        main.post(new Runnable() {
+            @Override
+            public void run() {
+                if (!isFinishing()) web.evaluateJavascript(js, null);
+            }
+        });
+    }
+}

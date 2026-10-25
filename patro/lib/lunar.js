@@ -191,6 +191,7 @@
   }
 
   var api = {
+    ayanamsa: ayanamsa,
     siderealSun: siderealSun,
     newMoon: newMoon,
     lunationAt: lunationAt,
