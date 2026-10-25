@@ -36,6 +36,11 @@ function preview(text) {
     .replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 700);
 }
 
+// Raw HTML (scripts included) so the log shows where a page loads its data from.
+function rawStart(body) {
+  return String(body).replace(/\s+/g, " ").slice(0, 1500);
+}
+
 async function get(url) {
   const res = await fetch(url, {
     headers: { "User-Agent": UA, "Accept": "application/json, text/html;q=0.9, */*;q=0.8" },
@@ -44,7 +49,10 @@ async function get(url) {
   });
   const body = await res.text();
   console.log(`  ${url} -> HTTP ${res.status}, ${body.length} bytes`);
-  if (!res.ok) throw new Error(`HTTP ${res.status} from ${url}`);
+  if (!res.ok) {
+    console.log("  raw page: " + rawStart(body));
+    throw new Error(`HTTP ${res.status} from ${url}`);
+  }
   return body;
 }
 
@@ -58,6 +66,7 @@ async function firstGood(label, urls, parse) {
       const data = parse(body);
       if (data) return data;
       console.log("  parsed nothing. Page text: " + preview(body));
+      console.log("  raw page: " + rawStart(body));
       lastError = new Error("Prices not found on " + url);
     } catch (err) {
       console.log("  failed: " + err.message + (err.cause ? " (" + err.cause.message + ")" : ""));
