@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ne">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Nepali Bikram Sambat calendar with tithi, date converter and national days.">
+  <title>Patro · Nepali Calendar</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">पा</span>
+      <span class="brand-name">Patro</span>
+    </div>
+    <div class="today" aria-live="polite">
+      <div class="today-bs" id="today-bs"></div>
+      <div class="today-meta" id="today-meta"></div>
+    </div>
+    <div class="topbar-actions">
+      <span class="clock" id="clock" title="Nepal Time (UTC+05:45)"></span>
+      <button type="button" class="lang-toggle" id="lang-toggle" aria-label="Switch language"></button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="calendar" aria-labelledby="month-title">
+      <div class="calendar-nav">
+        <button type="button" class="icon-btn" id="prev-month" aria-label="Previous month">‹</button>
+        <div class="month-heading">
+          <h1 id="month-title"></h1>
+          <p id="month-subtitle"></p>
+        </div>
+        <button type="button" class="icon-btn" id="next-month" aria-label="Next month">›</button>
+      </div>
+      <div class="calendar-controls">
+        <label class="sr-only" for="year-select">Year</label>
+        <select id="year-select"></select>
+        <label class="sr-only" for="month-select">Month</label>
+        <select id="month-select"></select>
+        <button type="button" class="btn" id="go-today"></button>
+      </div>
+      <div class="grid" id="weekday-row"></div>
+      <div class="grid days" id="days"></div>
+    </section>
+
+    <aside class="side">
+      <section class="card day-detail" id="day-detail" aria-live="polite"></section>
+
+      <section class="card">
+        <h2 id="converter-title"></h2>
+        <div class="converter-tabs" role="tablist">
+          <button type="button" role="tab" id="tab-bs2ad" aria-selected="true"></button>
+          <button type="button" role="tab" id="tab-ad2bs" aria-selected="false"></button>
+        </div>
+        <form class="converter" id="converter" novalidate>
+          <div class="converter-fields">
+            <input type="number" id="conv-year" inputmode="numeric" required>
+            <select id="conv-month"></select>
+            <input type="number" id="conv-day" inputmode="numeric" min="1" max="32" required>
+          </div>
+          <button type="submit" class="btn btn-primary" id="conv-submit"></button>
+          <p class="converter-result" id="conv-result" role="status"></p>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2 id="events-title"></h2>
+        <ul class="event-list" id="event-list"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <p id="footer-note"></p>
+  </footer>
+
+  <script src="lib/bs-data.js"></script>
+  <script src="lib/bs.js"></script>
+  <script src="lib/tithi.js"></script>
+  <script src="lib/events.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
