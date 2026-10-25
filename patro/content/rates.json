@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-25T16:00:16.902Z",
+  "updatedAt": "2026-10-25T16:02:05.425Z",
   "forex": {
-    "fetchedAt": "2026-10-25T16:00:16.902Z",
+    "fetchedAt": "2026-10-25T16:02:05.425Z",
     "data": {
       "date": "2026-10-25",
       "published": null,
@@ -165,11 +165,18 @@
       "source": "market"
     }
   },
-  "gold": null,
+  "gold": {
+    "fetchedAt": "2026-10-25T16:02:05.425Z",
+    "data": {
+      "fineGold": 278500,
+      "tejabiGold": null,
+      "silver": 3955,
+      "date": "2026-10-25"
+    }
+  },
   "fuel": null,
   "errors": {
     "forex": "fetch failed",
-    "gold": "Prices not found on https://fenegosida.org/",
     "fuel": "HTTP 403 from https://noc.org.np/"
   }
 }
