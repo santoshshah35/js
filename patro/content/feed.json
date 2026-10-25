@@ -1,10 +1,10 @@
 {
   "items": [
     {
-      "id": "ram-store-tihar-2083",
+      "id": "nexus-traders-2083",
       "slot": "top",
       "kind": "ad",
-      "title": { "ne": "राम स्टोर: तिहार विशेष छुट", "en": "Ram Store: Tihar special offer" },
+      "title": { "ne": "तिहार विशेष छुट", "en": "Tihar special offer" },
       "body": { "ne": "सबै सामानमा २०% छुट।", "en": "20% off everything." },
       "link": "https://www.example.com/tihar",
       "cta": { "ne": "हेर्नुहोस्", "en": "See offer" },
