@@ -16,6 +16,8 @@ Patro. Not affiliated with Hamro Patro.
 - BS ↔ AD date converter
 - Fixed-date national days (New Year, Republic Day, Constitution Day, ...)
 - Bottom menu: Calendar, Rashifal, Dates, Exchange, Fuel, More
+- Notices and ads managed by an admin in `content/feed.json`, with no app
+  update needed (see `content/README.md`)
 - Nepali and English; theme follows the phone, or set Light or Dark under More
 
 ## Run
@@ -90,6 +92,9 @@ requests too.
   price table; if a site changes its layout the app shows a link to the site
   instead of a wrong number. The currency calculator uses the NRB buying
   rate for foreign → NPR and the selling rate for NPR → foreign.
+- `lib/feed.js`: checks the admin feed. Malformed entries, non-https links
+  and entries outside their dates are dropped; the Android app may only
+  fetch it from this repository on raw.githubusercontent.com.
 - `ui/`: one file per screen (`calendar`, `upcoming`, `rashifal`,
   `converter`, `markets`) on top of `core.js` (shared state, text,
   helpers); `shell.js` runs the bottom menu, settings sheet and start-up.

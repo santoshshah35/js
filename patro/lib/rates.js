@@ -265,6 +265,7 @@
   }
 
   var api = {
+    httpGet: httpGet,
     FUEL_PAGE: FUEL_PAGE,
     parseFuel: parseFuel,
     convertCurrency: convertCurrency,

@@ -352,6 +352,35 @@ button:focus-visible, select:focus-visible, input:focus-visible, .day:focus-visi
 .upcoming-name { font-weight: 600; }
 .upcoming-meta { color: var(--muted); font-size: 0.85rem; }
 
+/* Admin notices and ads */
+.feed-slot { display: flex; flex-direction: column; gap: 10px; }
+.feed-top {
+  max-width: 1180px; margin: 16px auto 0;
+  padding-left: max(24px, env(safe-area-inset-left, 0px));
+  padding-right: max(24px, env(safe-area-inset-right, 0px));
+}
+.feed-card {
+  position: relative; display: flex; gap: 14px; align-items: stretch;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden; box-shadow: var(--shadow);
+}
+.feed-card.feed-notice { border-left: 4px solid var(--blue); }
+.feed-image { width: 112px; max-width: 32%; object-fit: cover; flex: 0 0 auto; background: var(--surface-2); }
+.feed-body { display: flex; flex-direction: column; gap: 4px; padding: 14px 40px 14px 0; min-width: 0; }
+.feed-notice .feed-body, .feed-card.no-image .feed-body { padding-left: 16px; }
+.feed-label {
+  align-self: flex-start; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 0 8px;
+}
+.feed-title { margin: 2px 0 0; font-size: 1rem; line-height: 1.35; }
+.feed-text { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.feed-link { align-self: flex-start; margin-top: 4px; color: var(--accent); font-weight: 600; }
+.feed-close {
+  position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 50%;
+  border: 0; background: transparent; color: var(--muted); font-size: 1.3rem; line-height: 1; cursor: pointer;
+}
+.feed-close:hover { background: var(--surface-2); color: var(--text); }
+
 /* Bottom menu */
 .bottom-nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
@@ -445,4 +474,9 @@ button:focus-visible, select:focus-visible, input:focus-visible, .day:focus-visi
     padding-right: max(16px, env(safe-area-inset-right, 0px));
   }
   .lang-toggle { display: none; }
+  .feed-top {
+    margin-top: 12px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
 }

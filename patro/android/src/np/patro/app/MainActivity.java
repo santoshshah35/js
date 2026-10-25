@@ -38,6 +38,9 @@ public class MainActivity extends Activity {
     private static final Set<String> ALLOWED_HOSTS = new HashSet<String>(Arrays.asList(
             "www.nrb.org.np", "nrb.org.np", "www.fenegosida.org", "fenegosida.org",
             "noc.org.np", "www.noc.org.np"));
+    // Admin feed (lib/feed.js): only this repository's files on GitHub.
+    private static final String FEED_HOST = "raw.githubusercontent.com";
+    private static final String FEED_PATH = "/santoshshah35/js/";
     private static final int MAX_BYTES = 2 * 1024 * 1024;
 
     private final ExecutorService pool = Executors.newFixedThreadPool(2);
@@ -149,7 +152,8 @@ public class MainActivity extends Activity {
 
     private static String fetch(String address) throws Exception {
         URL url = new URL(address);
-        if (!"https".equals(url.getProtocol()) || !ALLOWED_HOSTS.contains(url.getHost())) {
+        boolean feed = FEED_HOST.equals(url.getHost()) && url.getPath().startsWith(FEED_PATH);
+        if (!"https".equals(url.getProtocol()) || !(feed || ALLOWED_HOSTS.contains(url.getHost()))) {
             throw new SecurityException("Host not allowed: " + url.getHost());
         }
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();

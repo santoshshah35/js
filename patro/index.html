@@ -34,6 +34,7 @@
   </header>
 
   <button type="button" class="event-strip" id="event-strip" hidden></button>
+  <div class="feed-slot feed-top" data-feed-slot="top" hidden></div>
 
   <main>
     <div class="layout" data-view="calendar">
@@ -68,6 +69,7 @@
     </div>
 
     <div class="screen" data-view="rashifal" hidden>
+      <div class="feed-slot" data-feed-slot="rashifal" hidden></div>
       <section class="card" aria-labelledby="rashifal-title">
         <div class="screen-head">
           <button type="button" class="icon-btn" id="rashifal-prev">‹</button>
@@ -104,6 +106,7 @@
     </div>
 
     <div class="screen" data-view="forex" hidden>
+      <div class="feed-slot" data-feed-slot="forex" hidden></div>
       <section class="card" aria-labelledby="forex-title">
         <div class="card-head">
           <h1 class="card-title" id="forex-title"></h1>
@@ -138,6 +141,7 @@
     </div>
 
     <div class="screen narrow" data-view="fuel" hidden>
+      <div class="feed-slot" data-feed-slot="fuel" hidden></div>
       <section class="card" aria-labelledby="fuel-title">
         <div class="card-head">
           <h1 class="card-title" id="fuel-title"></h1>
@@ -217,12 +221,14 @@
   <script src="lib/upcoming.js"></script>
   <script src="lib/rashifal.js"></script>
   <script src="lib/rates.js"></script>
+  <script src="lib/feed.js"></script>
   <script src="ui/core.js"></script>
   <script src="ui/calendar.js"></script>
   <script src="ui/upcoming.js"></script>
   <script src="ui/rashifal.js"></script>
   <script src="ui/converter.js"></script>
   <script src="ui/markets.js"></script>
+  <script src="ui/feed.js"></script>
   <script src="ui/shell.js"></script>
 </body>
 </html>

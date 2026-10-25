@@ -167,6 +167,7 @@
     UI.rashifal.init();
     UI.converter.init();
     UI.markets.init();
+    UI.feed.init();
     renderNav();
     renderSheet();
     show(viewFromHash());
