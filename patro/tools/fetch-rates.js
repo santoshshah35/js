@@ -76,6 +76,31 @@ async function firstGood(label, urls, parse) {
   throw lastError;
 }
 
+// FENEGOSIDA's home page is a single-page app: the HTML is an empty shell
+// and its script loads the prices. Log the endpoints that script refers to,
+// so the parser can read the same data the page shows.
+async function discoverSpaEndpoints(pageUrl) {
+  try {
+    const html = await get(pageUrl);
+    const scripts = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map((m) => new URL(m[1], pageUrl).href)
+      .filter((u) => new URL(u).host === new URL(pageUrl).host);
+    for (const src of scripts) {
+      const js = await get(src);
+      const urls = new Set();
+      for (const m of js.matchAll(/["'`](https?:\/\/[^"'`\s]{4,200}|\/(?:api|v\d)[^"'`\s]{1,200})["'`]/g)) urls.add(m[1]);
+      console.log(`  ${src}: ${urls.size} address strings`);
+      for (const u of urls) console.log("    " + u);
+      // Context around words that usually name the rate data.
+      for (const word of ["tola", "fine", "tejabi", "silver", "rate"]) {
+        const i = js.toLowerCase().indexOf(word);
+        if (i >= 0) console.log(`    [${word}] …${js.slice(Math.max(0, i - 160), i + 160).replace(/\s+/g, " ")}…`);
+      }
+    }
+  } catch (err) {
+    console.log("  discovery failed: " + err.message);
+  }
+}
+
 async function main() {
   const now = new Date();
   const nepalToday = new Date(now.getTime() + (5 * 60 + 45) * 60000);
@@ -110,6 +135,8 @@ async function main() {
   try {
     out.gold = stamp(await firstGood("FENEGOSIDA gold", GOLD, Rates.parseGold));
   } catch (err) {
+    console.log("FENEGOSIDA page script:");
+    await discoverSpaEndpoints(GOLD[0]);
     out.errors.gold = err.message;
     out.gold = previous.gold || null;
   }
