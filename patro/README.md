@@ -9,13 +9,15 @@ Patro. Not affiliated with Hamro Patro.
 - Tithi, paksha and lunar month for each day, computed for Kathmandu
 - Festivals set by the lunar calendar: Dashain, Tihar, Chhath, Teej, Holi,
   Janai Purnima, Shivaratri, Buddha Jayanti and more
-- Daily rashifal for all twelve rashis, from the Moon's transit
+- Rashifal for all twelve rashis: daily and weekly from the Moon's transit,
+  monthly from the Sun's
 - Exchange rates from Nepal Rastra Bank with a currency calculator, gold and
   silver prices from FENEGOSIDA, and petrol, diesel, kerosene and LPG prices
   from Nepal Oil Corporation (loaded by the Android app; see below)
 - BS ↔ AD date converter
 - Fixed-date national days (New Year, Republic Day, Constitution Day, ...)
-- Bottom menu: Calendar, Rashifal, Dates, Exchange, Fuel, More
+- Bottom menu: Calendar, Rashifal, Dates, Exchange, Fuel, More; swipe left
+  or right to move between them
 - Android home-screen widget: today's date, tithi and the next festival
 - Back button leaves the app (closing the settings sheet first if open)
 - Notices and ads managed by an admin in `content/feed.json`, with no app
@@ -92,7 +94,11 @@ requests too.
   last good result kept for offline use. FENEGOSIDA and Nepal Oil
   Corporation have no API, so their prices are read from the page text or
   price table; if a site changes its layout the app shows a link to the site
-  instead of a wrong number. The currency calculator uses the NRB buying
+  instead of a wrong number, with the start of the page text so the layout
+  can be fixed. When NRB can't be reached (its site refuses some networks,
+  including many outside Nepal) the app falls back to market mid-rates from
+  the free fawazahmed0/currency-api dataset and labels them as such. The
+  currency calculator uses the NRB buying
   rate for foreign → NPR and the selling rate for NPR → foreign.
 - `lib/feed.js`: checks the admin feed. Malformed entries, non-https links
   and entries outside their dates are dropped; the Android app may only

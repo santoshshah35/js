@@ -39,6 +39,10 @@ public class MainActivity extends Activity {
     private static final Set<String> ALLOWED_HOSTS = new HashSet<String>(Arrays.asList(
             "www.nrb.org.np", "nrb.org.np", "www.fenegosida.org", "fenegosida.org",
             "noc.org.np", "www.noc.org.np"));
+    // Market-rate fallback (lib/rates.js) when NRB can't be reached.
+    private static final String MARKET_CDN_HOST = "cdn.jsdelivr.net";
+    private static final String MARKET_CDN_PATH = "/npm/@fawazahmed0/currency-api";
+    private static final String MARKET_MIRROR_HOST = "latest.currency-api.pages.dev";
     // Admin feed (lib/feed.js): only this repository's files on GitHub.
     private static final String FEED_HOST = "raw.githubusercontent.com";
     private static final String FEED_PATH = "/santoshshah35/js/";
@@ -178,8 +182,11 @@ public class MainActivity extends Activity {
 
     private static String fetch(String address) throws Exception {
         URL url = new URL(address);
-        boolean feed = FEED_HOST.equals(url.getHost()) && url.getPath().startsWith(FEED_PATH);
-        if (!"https".equals(url.getProtocol()) || !(feed || ALLOWED_HOSTS.contains(url.getHost()))) {
+        String host = url.getHost();
+        boolean feed = FEED_HOST.equals(host) && url.getPath().startsWith(FEED_PATH);
+        boolean market = (MARKET_CDN_HOST.equals(host) && url.getPath().startsWith(MARKET_CDN_PATH))
+                || MARKET_MIRROR_HOST.equals(host);
+        if (!"https".equals(url.getProtocol()) || !(feed || market || ALLOWED_HOSTS.contains(host))) {
             throw new SecurityException("Host not allowed: " + url.getHost());
         }
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();

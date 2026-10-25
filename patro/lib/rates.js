@@ -14,6 +14,25 @@
   var NRB_API = "https://www.nrb.org.np/api/forex/v1/rates";
   // Tried when the main endpoint fails: the feed NRB's own mobile app uses.
   var NRB_APP_API = "https://www.nrb.org.np/api/forex/v1/app-rate";
+  // Used only when NRB can't be reached (its site refuses some networks,
+  // including many outside Nepal): daily market mid-rates from the free
+  // fawazahmed0/currency-api dataset. These are not NRB's buying and selling
+  // rates, and the app says so.
+  var MARKET_URLS = [
+    "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/npr.json",
+    "https://latest.currency-api.pages.dev/v1/currencies/npr.json"
+  ];
+  // Currencies NRB publishes, with the units it quotes them in.
+  var MARKET_CURRENCIES = [
+    ["USD", "U.S. Dollar", 1], ["EUR", "European Euro", 1], ["GBP", "UK Pound Sterling", 1],
+    ["CHF", "Swiss Franc", 1], ["AUD", "Australian Dollar", 1], ["CAD", "Canadian Dollar", 1],
+    ["SGD", "Singapore Dollar", 1], ["JPY", "Japanese Yen", 10], ["CNY", "Chinese Yuan", 1],
+    ["SAR", "Saudi Arabian Riyal", 1], ["QAR", "Qatari Riyal", 1], ["THB", "Thai Baht", 1],
+    ["AED", "UAE Dirham", 1], ["MYR", "Malaysian Ringgit", 1], ["KRW", "South Korean Won", 100],
+    ["SEK", "Swedish Kroner", 1], ["DKK", "Danish Kroner", 1], ["HKD", "Hong Kong Dollar", 1],
+    ["KWD", "Kuwaity Dinar", 1], ["BHD", "Bahrain Dinar", 1], ["OMR", "Omani Rial", 1],
+    ["INR", "Indian Rupee", 100]
+  ];
   var NRB_PAGE = "https://www.nrb.org.np/forex/";
   var GOLD_URL = "https://www.fenegosida.org/";
   var FUEL_URLS = ["https://noc.org.np/retailprice", "https://noc.org.np/"];
@@ -99,6 +118,56 @@
   }
 
   /**
+   * Market mid-rates from the currency-api dataset: {date, npr: {usd: 0.0071, ...}},
+   * where each value is how much of that currency one rupee buys. Returned in
+   * the same shape as parseForex, with buy = sell = the mid-rate.
+   */
+  function parseMarket(body) {
+    var json = typeof body === "string" ? JSON.parse(body) : body;
+    var table = json && json.npr;
+    if (!table || typeof table !== "object") return null;
+    var rates = [];
+    MARKET_CURRENCIES.forEach(function (c) {
+      var perRupee = Number(table[c[0].toLowerCase()]);
+      if (!(perRupee > 0)) return;
+      var mid = Math.round((c[2] / perRupee) * 100) / 100;
+      rates.push({ iso3: c[0], name: c[1], unit: c[2], buy: mid, sell: mid });
+    });
+    if (!rates.length) return null;
+    return { date: typeof json.date === "string" ? json.date : null, published: null, rates: rates, source: "market" };
+  }
+
+  // First ~120 characters of a page's text, to show when parsing fails.
+  function pageStart(html) {
+    var text = pageText(html).trim();
+    return text.length > 120 ? text.slice(0, 120) + "…" : text || "(empty page)";
+  }
+
+  // Looser fallback: within the part of the text that belongs to one label
+  // (up to the next label), take the price that follows "tola".
+  function perTolaInSection(text, labels, index, min, max) {
+    var all = labels.join("|");
+    var re = new RegExp("(?:" + labels[index] + ")([\\s\\S]*?)(?=" + all + "|$)", "gi");
+    var m;
+    while ((m = re.exec(text))) {
+      var section = m[1].slice(0, 300);
+      var at = section.search(/tola|तोला/i);
+      if (at < 0) continue;
+      var plausible = function (part) {
+        return (part.match(/[0-9][0-9,]*(?:\.[0-9]+)?/g) || []).map(toNumber).filter(function (n) {
+          return n !== null && n >= min && n <= max;
+        });
+      };
+      // A price after "tola" first; otherwise the one closest before it.
+      var after = plausible(section.slice(at));
+      if (after.length) return after[0];
+      var before = plausible(section.slice(0, at));
+      if (before.length) return before[before.length - 1];
+    }
+    return null;
+  }
+
+  /**
    * Gold and silver prices per tola from the FENEGOSIDA home page.
    * The site has no API, so this reads the page's visible text. A value that
    * is missing or outside a plausible range is left null.
@@ -116,11 +185,14 @@
       return n !== null && n >= min && n <= max ? n : null;
     }
 
-    var result = {
-      fineGold: perTola("FINE\\s*GOLD", 10000, 2000000),
-      tejabiGold: perTola("TEJABI\\s*GOLD", 10000, 2000000),
-      silver: perTola("SILVER", 100, 100000)
-    };
+    var labels = ["FINE\\s*GOLD|छापावाल", "TEJABI\\s*GOLD|तेजाबी", "SILVER|चाँदी"];
+    var ranges = [[10000, 2000000], [10000, 2000000], [100, 100000]];
+    var keys = ["fineGold", "tejabiGold", "silver"];
+    var result = {};
+    keys.forEach(function (key, i) {
+      result[key] = perTola(labels[i], ranges[i][0], ranges[i][1])
+        || perTolaInSection(text, labels, i, ranges[i][0], ranges[i][1]);
+    });
     return result.fineGold || result.tejabiGold || result.silver ? result : null;
   }
 
@@ -272,6 +344,13 @@
     return attempt(0).then(function (data) {
       saveCache("patro.forex", data);
       return { data: data, cachedAt: null };
+    }).catch(function (nrbError) {
+      // NRB unreachable: fall back to market rates, then to the saved copy.
+      return loadMarket().then(function (data) {
+        data.nrbError = nrbError && nrbError.message;
+        if (!data.date) data.date = isoDate(dayNumber);
+        return { data: data, cachedAt: null };
+      }).catch(function () { throw nrbError; });
     }).catch(function (err) {
       var cached = readCache("patro.forex");
       if (cached) return { data: cached.value, cachedAt: cached.at };
@@ -279,10 +358,24 @@
     });
   }
 
+  function loadMarket() {
+    function attempt(i) {
+      return httpGet(MARKET_URLS[i]).then(function (body) {
+        var data = parseMarket(body);
+        if (!data) throw new Error("No market rates");
+        return data;
+      }).catch(function (err) {
+        if (i + 1 < MARKET_URLS.length) return attempt(i + 1);
+        throw err;
+      });
+    }
+    return attempt(0);
+  }
+
   function loadGold() {
     return httpGet(GOLD_URL).then(function (html) {
       var data = parseGold(html);
-      if (!data) throw new Error("Prices not found on the page");
+      if (!data) throw new Error("Prices not found. Page text: " + pageStart(html));
       saveCache("patro.gold", data);
       return { data: data, cachedAt: null };
     }).catch(function (err) {
@@ -296,7 +389,7 @@
     function attempt(i) {
       return httpGet(FUEL_URLS[i]).then(function (html) {
         var data = parseFuel(html);
-        if (!data) throw new Error("Prices not found on the page");
+        if (!data) throw new Error("Prices not found. Page text: " + pageStart(html));
         return data;
       }).catch(function (err) {
         if (i + 1 < FUEL_URLS.length) return attempt(i + 1);
@@ -317,6 +410,7 @@
     httpGet: httpGet,
     FUEL_PAGE: FUEL_PAGE,
     parseFuel: parseFuel,
+    parseMarket: parseMarket,
     convertCurrency: convertCurrency,
     loadFuel: loadFuel,
     NRB_PAGE: NRB_PAGE,

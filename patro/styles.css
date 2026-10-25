@@ -381,6 +381,14 @@ button:focus-visible, select:focus-visible, input:focus-visible, .day:focus-visi
 }
 .feed-close:hover { background: var(--surface-2); color: var(--text); }
 
+/* Tab change by swipe */
+@media (prefers-reduced-motion: no-preference) {
+  .slide-from-right { animation: slide-from-right 200ms ease-out; }
+  .slide-from-left { animation: slide-from-left 200ms ease-out; }
+  @keyframes slide-from-right { from { transform: translateX(32px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+  @keyframes slide-from-left { from { transform: translateX(-32px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+}
+
 /* Bottom menu */
 .bottom-nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
@@ -424,6 +432,10 @@ button:focus-visible, select:focus-visible, input:focus-visible, .day:focus-visi
 }
 .notice { margin: 0; font-size: 0.9rem; }
 .notice a { color: var(--blue); }
+.market-note {
+  margin-bottom: 12px; padding: 8px 12px; border-radius: 10px;
+  background: var(--mixed-soft); color: var(--mixed); font-size: 0.85rem;
+}
 
 .footer {
   max-width: 1180px; margin: 0 auto 32px;
@@ -480,3 +492,5 @@ button:focus-visible, select:focus-visible, input:focus-visible, .day:focus-visi
     padding-right: max(16px, env(safe-area-inset-right, 0px));
   }
 }
+
+.rashi-detail { color: var(--muted); font-size: 0.82rem !important; }

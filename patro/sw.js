@@ -6,7 +6,7 @@
  */
 "use strict";
 
-var VERSION = "patro-v4";
+var VERSION = "patro-v5";
 var FILES = [
   "./",
   "index.html",

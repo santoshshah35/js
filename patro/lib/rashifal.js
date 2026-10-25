@@ -88,7 +88,96 @@
     return { moon: moon, readings: readings };
   }
 
-  var api = { RASHIS: RASHIS, siderealMoon: siderealMoon, moonOn: moonOn, rashifalOn: rashifalOn };
+  // The Sun in house 1-12 from the rashi, for the monthly reading. Classical
+  // gochar favours houses 3, 6, 10 and 11; 8 and 12 call for most care.
+  var SUN_READINGS = [
+    { tone: "mixed", ne: "सूर्य जन्म राशिमा: थकान र झर्को बढ्न सक्छ। स्वास्थ्य र आरामलाई प्राथमिकता दिनुहोस्।", en: "Sun in your sign: fatigue and short temper are possible. Put health and rest first." },
+    { tone: "mixed", ne: "खर्च र परिवारमा तनाव बढ्न सक्छ। बोली र बजेटमा ध्यान दिनुहोस्।", en: "Spending and family friction may rise. Watch your words and your budget." },
+    { tone: "good", ne: "आँट, स्वास्थ्य र सफलताको महिना। अड्केका काम अघि बढ्नेछन्।", en: "A month of courage, good health and success. Stalled work moves forward." },
+    { tone: "mixed", ne: "घर, सवारी र यात्रामा बाधा आउन सक्छ। मन शान्त राख्नुहोस्।", en: "Home, vehicles and travel may meet obstacles. Keep a calm mind." },
+    { tone: "mixed", ne: "मन अशान्त र सन्तानको चिन्ता हुन सक्छ। ठूला लगानी पर्खनुहोस्।", en: "Worry and concern about children are possible. Hold off on big investments." },
+    { tone: "good", ne: "रोग, शत्रु र ऋणमाथि विजय। प्रतिस्पर्धामा सफलता मिल्नेछ।", en: "Victory over illness, rivals and debts. Success in competition." },
+    { tone: "mixed", ne: "यात्राले थकाउन सक्छ। साझेदारी र दाम्पत्यमा धैर्य राख्नुहोस्।", en: "Travel may tire you. Be patient with partners and your spouse." },
+    { tone: "bad", ne: "स्वास्थ्य र विवादमा विशेष सावधानी। जोखिमपूर्ण काम नगर्नुहोस्।", en: "Take special care with health and disputes. Avoid risky ventures." },
+    { tone: "mixed", ne: "काममा अवरोध र आत्मविश्वासमा कमी आउन सक्छ। बुझेर मात्र निर्णय गर्नुहोस्।", en: "Obstacles and lower confidence are possible. Decide only after careful thought." },
+    { tone: "good", ne: "काम र पेसामा सफलता, पद र मान बढ्नेछ।", en: "Success at work, with recognition and standing." },
+    { tone: "good", ne: "आम्दानी, लाभ र सम्मानको महिना। इच्छा पूरा हुने योग।", en: "A month of income, gains and honour. Wishes tend to come true." },
+    { tone: "bad", ne: "खर्च र भ्रमण बढ्नेछ, आराम कम हुन सक्छ। फजुल खर्चबाट बच्नुहोस्।", en: "More spending and travel, less rest. Avoid needless expense." }
+  ];
+
+  function house(sign, rashi) {
+    return ((sign - rashi + 12) % 12) + 1;
+  }
+
+  function overallTone(good, bad) {
+    if (bad >= 3) return "bad";
+    if (good >= 4 && bad <= 1) return "good";
+    return "mixed";
+  }
+
+  /**
+   * The Moon's day-by-day transit over a run of days, for each rashi: which
+   * days read good, mixed or bad, and the chandrashtama (eighth house) days.
+   * @param {number} firstDay @param {number} lastDay inclusive
+   */
+  function daysFor(firstDay, lastDay) {
+    var signs = [];
+    for (var n = firstDay; n <= lastDay; n++) signs.push(moonOn(n).sign);
+    return RASHIS.map(function (rashi, i) {
+      var r = { rashi: rashi, good: [], mixed: [], bad: [], chandrashtama: [] };
+      signs.forEach(function (sign, k) {
+        var h = house(sign, i);
+        r[READINGS[h - 1].tone].push(firstDay + k);
+        if (h === 8) r.chandrashtama.push(firstDay + k);
+      });
+      return r;
+    });
+  }
+
+  /** Weekly reading for the seven days from firstDay (a Sunday). */
+  function weeklyFor(firstDay) {
+    return {
+      first: firstDay,
+      last: firstDay + 6,
+      readings: daysFor(firstDay, firstDay + 6).map(function (r) {
+        r.tone = overallTone(r.good.length, r.bad.length);
+        return r;
+      })
+    };
+  }
+
+  /**
+   * Monthly reading for a BS month: the Sun's transit house from each rashi
+   * (the Sun spends the month in sign month - 1) plus the Moon's days.
+   * @param {number} firstDay first day of the month @param {number} lastDay last day
+   * @param {number} month BS month 1-12
+   */
+  function monthlyFor(firstDay, lastDay, month) {
+    var sunSign = month - 1;
+    return {
+      first: firstDay,
+      last: lastDay,
+      sunSign: sunSign,
+      readings: daysFor(firstDay, lastDay).map(function (r, i) {
+        var h = house(sunSign, i);
+        var sun = SUN_READINGS[h - 1];
+        r.sunHouse = h;
+        r.tone = sun.tone;
+        r.ne = sun.ne;
+        r.en = sun.en;
+        return r;
+      })
+    };
+  }
+
+  var api = {
+    RASHIS: RASHIS,
+    siderealMoon: siderealMoon,
+    moonOn: moonOn,
+    rashifalOn: rashifalOn,
+    weeklyFor: weeklyFor,
+    monthlyFor: monthlyFor
+  };
 
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.PatroRashifal = api;

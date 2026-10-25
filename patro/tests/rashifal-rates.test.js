@@ -97,3 +97,31 @@ test("a flat list of rates is accepted too", () => {
 test("a web page instead of JSON gives a readable reason", () => {
   assert.throws(() => Rates.parseForex("<!doctype html><title>Just a moment</title>"), /web page/);
 });
+
+test("weekly rashifal counts each of the seven days once per rashi", () => {
+  const sunday = BS.dayNumber(2026, 10, 25);
+  const week = R.weeklyFor(sunday);
+  assert.equal(week.readings.length, 12);
+  for (const r of week.readings) {
+    assert.equal(r.good.length + r.mixed.length + r.bad.length, 7);
+    assert.ok(r.chandrashtama.every((d) => r.bad.includes(d)));
+    assert.ok(["good", "mixed", "bad"].includes(r.tone));
+  }
+  // Across the twelve rashis the Moon's eighth house falls somewhere every day.
+  const all = week.readings.flatMap((r) => r.chandrashtama).sort((a, b) => a - b);
+  for (let d = sunday; d <= sunday + 6; d++) assert.ok(all.includes(d));
+});
+
+test("monthly rashifal follows the Sun's sign for the BS month", () => {
+  const first = BS.bsToDayNumber(2083, 7, 1); // Kartik: Sun in Tula (sign 6)
+  const last = first + BS.daysInMonth(2083, 7) - 1;
+  const month = R.monthlyFor(first, last, 7);
+  assert.equal(month.sunSign, 6);
+  assert.equal(month.readings[6].sunHouse, 1); // Tula itself
+  assert.equal(month.readings[3].sunHouse, 4); // Karkat
+  assert.equal(month.readings[3 + 1].sunHouse, 3); // Singha: favourable
+  assert.equal(month.readings[4].tone, "good");
+  for (const r of month.readings) {
+    assert.equal(r.good.length + r.mixed.length + r.bad.length, last - first + 1);
+  }
+});

@@ -11,6 +11,10 @@
   var $ = UI.$;
 
   var VIEWS = ["calendar", "rashifal", "converter", "forex", "fuel", "events"];
+  // The bottom-menu tabs in order, for swiping between them.
+  var TABS = ["calendar", "rashifal", "converter", "forex", "fuel"];
+  var SWIPE_MIN_PX = 60;
+  var SWIPE_MAX_MS = 700;
   var THEME_COLORS = { light: "#c8102e", dark: "#1d1c1a" };
   var themeSetByApp = false;
 
@@ -58,7 +62,7 @@
     return VIEWS.indexOf(h) >= 0 ? h : "calendar";
   }
 
-  function show(view) {
+  function show(view, from) {
     UI.state.view = view;
     Array.prototype.forEach.call(document.querySelectorAll("[data-view]"), function (section) {
       section.hidden = section.getAttribute("data-view") !== view;
@@ -68,18 +72,51 @@
       else item.removeAttribute("aria-current");
     });
     root.scrollTo(0, 0);
+    if (from) {
+      var section = document.querySelector('[data-view="' + view + '"]');
+      section.classList.remove("slide-from-left", "slide-from-right");
+      void section.offsetWidth; // restart the animation
+      section.classList.add(from === "right" ? "slide-from-right" : "slide-from-left");
+    }
   }
 
   // Switching screens replaces the address instead of adding a history entry,
   // so the phone's back button leaves the app rather than stepping back
   // through every tab visited.
-  UI.navigate = function (view) {
+  UI.navigate = function (view, from) {
     if (view === UI.state.view) { root.scrollTo(0, 0); return; }
     try {
       root.history.replaceState(null, "", "#" + view);
     } catch (e) { /* some embedded views refuse it; the screen still switches */ }
-    show(view);
+    show(view, from);
   };
+
+  // ---- Swipe between tabs ----
+
+  // Drag left for the next tab (towards Fuel), right for the previous one
+  // (towards Calendar). Ignored on controls and sideways-scrolling tables.
+  function enableSwipe() {
+    var start = null;
+    document.addEventListener("touchstart", function (e) {
+      start = null;
+      if (e.touches.length !== 1 || !$("more-sheet").hidden) return;
+      if (e.target.closest("input, select, textarea, .rates-scroll, .bottom-nav")) return;
+      start = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
+    }, { passive: true });
+    document.addEventListener("touchend", function (e) {
+      if (!start || !e.changedTouches.length) return;
+      var dx = e.changedTouches[0].clientX - start.x;
+      var dy = e.changedTouches[0].clientY - start.y;
+      var quick = Date.now() - start.time <= SWIPE_MAX_MS;
+      start = null;
+      if (!quick || Math.abs(dx) < SWIPE_MIN_PX || Math.abs(dx) < 2 * Math.abs(dy)) return;
+      var current = TABS.indexOf(UI.state.view);
+      if (current < 0) current = 0; // the events list sits with the calendar
+      var next = current + (dx < 0 ? 1 : -1);
+      if (next < 0 || next >= TABS.length) return;
+      UI.navigate(TABS[next], dx < 0 ? "right" : "left");
+    }, { passive: true });
+  }
 
   // ---- Theme ----
 
@@ -185,6 +222,7 @@
     show(viewFromHash());
     tickClock();
     registerOfflineSupport();
+    enableSwipe();
 
     Array.prototype.forEach.call(document.querySelectorAll(".nav-item[data-target]"), function (item) {
       item.addEventListener("click", function () { UI.navigate(item.getAttribute("data-target")); });

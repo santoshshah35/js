@@ -55,6 +55,10 @@
       fuelError: "यहाँबाट मूल्य लोड गर्न सकिएन। नेपाल आयल निगमको वेबसाइटमा हेर्नुहोस्:",
       appHint: "Patro एन्ड्रोइड एपमा यी दर आफैं लोड हुन्छन्।",
       reason: "कारण",
+      midRate: "बजार दर",
+      marketNote: "नेपाल राष्ट्र बैंकसँग जोडिन सकिएन, त्यसैले यी अन्तर्राष्ट्रिय बजारका औसत दर हुन्, बैंकको खरिद/बिक्री दर होइनन्।",
+      marketDate: "बजार दर · {date}",
+      calcMarket: "{iso} को बजार दर ({rate} प्रति {unit}) अनुसार",
       goldSource: "स्रोत: नेपाल सुनचाँदी व्यवसायी महासंघ",
       forexSource: "स्रोत: नेपाल राष्ट्र बैंक",
       fuelSource: "स्रोत: नेपाल आयल निगम"
@@ -94,6 +98,10 @@
       fuelError: "Couldn't load prices here. See Nepal Oil Corporation:",
       appHint: "The Patro Android app loads these rates automatically.",
       reason: "Reason",
+      midRate: "Market rate",
+      marketNote: "Couldn't reach Nepal Rastra Bank, so these are international market mid-rates, not the bank's buying and selling rates.",
+      marketDate: "Market rates · {date}",
+      calcMarket: "at the market rate for {iso} ({rate} per {unit})",
       goldSource: "Source: Federation of Nepal Gold and Silver Dealers' Association",
       forexSource: "Source: Nepal Rastra Bank",
       fuelSource: "Source: Nepal Oil Corporation"
@@ -129,10 +137,16 @@
       renderError(box, t("forexError"), Rates.NRB_PAGE, f.reason);
       return;
     }
+    var market = f.data.source === "market";
     var parts = f.data.date.split("-").map(Number);
+    var dateText = UI.formatBs(BS.toBS(parts[0], parts[1], parts[2]));
     meta.textContent = f.cachedAt
       ? UI.fill(t("savedCopy"), { date: UI.dateOfMoment(f.cachedAt) })
-      : UI.fill(t("publishedOn"), { date: UI.formatBs(BS.toBS(parts[0], parts[1], parts[2])) });
+      : UI.fill(t(market ? "marketDate" : "publishedOn"), { date: dateText });
+    if (market) {
+      box.appendChild(el("p", "notice market-note", t("marketNote")));
+      if (f.data.nrbError) box.appendChild(el("p", "fineprint", t("reason") + ": " + f.data.nrbError));
+    }
 
     var list = sortedRates();
     var shown = data.showAll ? list : list.slice(0, COLLAPSED_ROWS);
@@ -140,7 +154,7 @@
     var table = el("table", "rates-table");
     var thead = el("thead");
     var head = el("tr");
-    [t("currency"), t("buy"), t("sell")].forEach(function (h) {
+    (market ? [t("currency"), t("midRate")] : [t("currency"), t("buy"), t("sell")]).forEach(function (h) {
       var th = el("th", null, h);
       th.scope = "col";
       head.appendChild(th);
@@ -156,7 +170,7 @@
       name.appendChild(el("span", "unit", UI.num(r.unit)));
       tr.appendChild(name);
       tr.appendChild(el("td", null, UI.money(r.buy, 2)));
-      tr.appendChild(el("td", null, UI.money(r.sell, 2)));
+      if (!market) tr.appendChild(el("td", null, UI.money(r.sell, 2)));
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);
@@ -172,7 +186,7 @@
       });
       box.appendChild(toggle);
     }
-    box.appendChild(el("p", "fineprint", t("forexSource")));
+    if (!market) box.appendChild(el("p", "fineprint", t("forexSource")));
   }
 
   // ---- Calculator ----
@@ -225,7 +239,9 @@
     out.textContent = calc.direction === "toNpr"
       ? amountText + " " + iso + " = रु " + UI.money(result, 2)
       : "रु " + amountText + " = " + UI.money(result, 2) + " " + iso;
-    $("calc-basis").textContent = UI.fill(t(calc.direction === "toNpr" ? "calcToNpr" : "calcFromNpr"), {
+    var basisKey = data.forex.data.source === "market" ? "calcMarket"
+      : calc.direction === "toNpr" ? "calcToNpr" : "calcFromNpr";
+    $("calc-basis").textContent = UI.fill(t(basisKey), {
       iso: iso,
       rate: UI.money(calc.direction === "toNpr" ? rate.buy : rate.sell, 2),
       unit: UI.num(rate.unit) + " " + iso
