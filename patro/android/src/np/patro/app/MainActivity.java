@@ -1,6 +1,10 @@
 package np.patro.app;
 
 import android.app.Activity;
+import android.content.res.Configuration;
+import android.graphics.Color;
+import android.os.Build;
+import android.view.View;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
@@ -32,7 +36,8 @@ public class MainActivity extends Activity {
 
     private static final String START_URL = "file:///android_asset/www/index.html";
     private static final Set<String> ALLOWED_HOSTS = new HashSet<String>(Arrays.asList(
-            "www.nrb.org.np", "nrb.org.np", "www.fenegosida.org", "fenegosida.org"));
+            "www.nrb.org.np", "nrb.org.np", "www.fenegosida.org", "fenegosida.org",
+            "noc.org.np", "www.noc.org.np"));
     private static final int MAX_BYTES = 2 * 1024 * 1024;
 
     private final ExecutorService pool = Executors.newFixedThreadPool(2);
@@ -90,8 +95,38 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
-    /** Called from lib/rates.js as PatroNative.httpGet(id, url). */
+    /** Status bar colours to match the page's light or dark theme. */
+    private void applyBars(String mode) {
+        boolean dark;
+        if ("dark".equals(mode)) dark = true;
+        else if ("light".equals(mode)) dark = false;
+        else dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES;
+        getWindow().setStatusBarColor(dark ? Color.rgb(0x1D, 0x1C, 0x1A) : Color.WHITE);
+        getWindow().setNavigationBarColor(dark ? Color.rgb(0x1D, 0x1C, 0x1A) : Color.WHITE);
+        if (Build.VERSION.SDK_INT >= 23) {
+            View decor = getWindow().getDecorView();
+            int flags = decor.getSystemUiVisibility();
+            flags = dark ? flags & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                    : flags | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            decor.setSystemUiVisibility(flags);
+        }
+    }
+
+    /** Called from the page's JavaScript as PatroNative.*. */
     private final class Bridge {
+        /** ui/shell.js: "system", "light" or "dark". */
+        @JavascriptInterface
+        public void setThemeMode(final String mode) {
+            main.post(new Runnable() {
+                @Override
+                public void run() {
+                    applyBars(mode);
+                }
+            });
+        }
+
+        /** lib/rates.js: fetch an allowed page and hand it back to __patroNativeDone. */
         @JavascriptInterface
         public void httpGet(final String id, final String url) {
             pool.execute(new Runnable() {

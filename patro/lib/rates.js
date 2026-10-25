@@ -1,5 +1,6 @@
 /*
- * Foreign exchange (Nepal Rastra Bank) and gold/silver (FENEGOSIDA) rates.
+ * Foreign exchange (Nepal Rastra Bank), gold/silver (FENEGOSIDA) and fuel
+ * (Nepal Oil Corporation) prices.
  *
  * Inside the Android app, requests go through the app's native HTTP bridge,
  * which is not subject to browser CORS rules. In a plain browser the request
@@ -13,8 +14,25 @@
   var NRB_API = "https://www.nrb.org.np/api/forex/v1/rates";
   var NRB_PAGE = "https://www.nrb.org.np/forex/";
   var GOLD_URL = "https://www.fenegosida.org/";
+  var FUEL_URLS = ["https://noc.org.np/retailprice", "https://noc.org.np/"];
+  var FUEL_PAGE = "https://noc.org.np/";
 
   // ---- Parsing (pure; tested in Node) ----
+
+  var DEVANAGARI_DIGITS = "०१२३४५६७८९";
+
+  function asciiDigits(text) {
+    return String(text).replace(/[०-९]/g, function (d) { return String(DEVANAGARI_DIGITS.indexOf(d)); });
+  }
+
+  function pageText(html) {
+    return asciiDigits(String(html)
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/\s+/g, " "));
+  }
 
   function toNumber(value) {
     var n = parseFloat(String(value).replace(/,/g, ""));
@@ -53,12 +71,7 @@
    * @returns {{fineGold:number|null, tejabiGold:number|null, silver:number|null}|null}
    */
   function parseGold(html) {
-    var text = String(html)
-      .replace(/<script[\s\S]*?<\/script>/gi, " ")
-      .replace(/<style[\s\S]*?<\/style>/gi, " ")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/&nbsp;/g, " ")
-      .replace(/\s+/g, " ");
+    var text = pageText(html);
 
     function perTola(label, min, max) {
       // An optional purity in brackets may follow the label: "FINE GOLD (9999)".
@@ -74,6 +87,81 @@
       silver: perTola("SILVER", 100, 100000)
     };
     return result.fineGold || result.tejabiGold || result.silver ? result : null;
+  }
+
+  var FUEL_ITEMS = [
+    // key, label pattern, plausible range in rupees
+    ["petrol", "Petrol|पेट्रोल", 80, 400],
+    ["diesel", "Diesel|डिजेल|डिजल", 80, 400],
+    ["kerosene", "Kerosene|मट्टितेल", 80, 400],
+    ["lpg", "LPG|L\\.P\\.G|एल\\.?\\s*पी\\.?\\s*जी|ग्यास|ग्याँस", 800, 5000]
+  ];
+
+  function inRange(n, min, max) {
+    return n !== null && n >= min && n <= max ? n : null;
+  }
+
+  // Prices from an HTML table: the header row names the products, and the
+  // row for Kathmandu (or else the first row of numbers) holds the prices.
+  function fuelFromTable(html) {
+    var rows = String(html).match(/<tr[\s\S]*?<\/tr>/gi) || [];
+    var header = null;
+    var data = null;
+    rows.forEach(function (row) {
+      var cells = (row.match(/<t[hd][^>]*>[\s\S]*?<\/t[hd]>/gi) || []).map(pageText).map(function (c) { return c.trim(); });
+      if (!header && cells.some(function (c) { return /Petrol|पेट्रोल/i.test(c); })) {
+        header = cells;
+      } else if (header && cells.length === header.length) {
+        var isKathmandu = cells.some(function (c) { return /Kathmandu|काठमाडौ/i.test(c); });
+        if (!data || isKathmandu) data = cells;
+      }
+    });
+    if (!header || !data) return null;
+    var out = {};
+    FUEL_ITEMS.forEach(function (item) {
+      var re = new RegExp(item[1], "i");
+      var i = header.findIndex(function (h) { return re.test(h); });
+      out[item[0]] = i < 0 ? null : inRange(toNumber(data[i]), item[2], item[3]);
+    });
+    return out;
+  }
+
+  // Prices written next to their labels, as in "Petrol: Rs 174 per litre".
+  function fuelFromText(html) {
+    var text = pageText(html);
+    var out = {};
+    FUEL_ITEMS.forEach(function (item) {
+      var re = new RegExp("(?:" + item[1] + ")[^0-9]{0,60}?([0-9][0-9,]*(?:\\.[0-9]+)?)", "i");
+      var m = text.match(re);
+      out[item[0]] = m ? inRange(toNumber(m[1]), item[2], item[3]) : null;
+    });
+    return out;
+  }
+
+  /**
+   * Retail fuel prices from a Nepal Oil Corporation page.
+   * @param {string} html
+   * @returns {{petrol:number|null, diesel:number|null, kerosene:number|null, lpg:number|null}|null}
+   */
+  function parseFuel(html) {
+    var table = fuelFromTable(html);
+    var result = table && (table.petrol || table.diesel) ? table : fuelFromText(html);
+    return result.petrol || result.diesel ? result : null;
+  }
+
+  /**
+   * Converts with a published NRB rate. Rates are quoted per `unit` of the
+   * foreign currency (e.g. per 100 INR). Selling foreign currency to a bank
+   * uses its buying rate; buying foreign currency uses its selling rate.
+   * @param {{unit:number, buy:number, sell:number}} rate
+   * @param {number} amount
+   * @param {"toNpr"|"fromNpr"} direction
+   * @returns {number|null}
+   */
+  function convertCurrency(rate, amount, direction) {
+    if (!rate || !isFinite(amount) || amount < 0) return null;
+    if (direction === "toNpr") return amount * rate.buy / rate.unit;
+    return amount * rate.unit / rate.sell;
   }
 
   // ---- Fetching (browser / Android app) ----
@@ -155,7 +243,32 @@
     });
   }
 
+  function loadFuel() {
+    function attempt(i) {
+      return httpGet(FUEL_URLS[i]).then(function (html) {
+        var data = parseFuel(html);
+        if (!data) throw new Error("Prices not found on the page");
+        return data;
+      }).catch(function (err) {
+        if (i + 1 < FUEL_URLS.length) return attempt(i + 1);
+        throw err;
+      });
+    }
+    return attempt(0).then(function (data) {
+      saveCache("patro.fuel", data);
+      return { data: data, cachedAt: null };
+    }).catch(function (err) {
+      var cached = readCache("patro.fuel");
+      if (cached) return { data: cached.value, cachedAt: cached.at };
+      throw err;
+    });
+  }
+
   var api = {
+    FUEL_PAGE: FUEL_PAGE,
+    parseFuel: parseFuel,
+    convertCurrency: convertCurrency,
+    loadFuel: loadFuel,
     NRB_PAGE: NRB_PAGE,
     GOLD_URL: GOLD_URL,
     parseForex: parseForex,

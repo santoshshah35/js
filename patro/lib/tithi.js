@@ -131,12 +131,12 @@
     return norm360(moonLongitude(jde) - sunLongitude(jde));
   }
 
-  // Sunrise (UT ms) at a place on a civil date, NOAA solar position method.
-  // dayNumber counts days since 1970-01-01.
-  function sunrise(dayNumber, place) {
+  // Sunrise or sunset (UT ms) at a place on a civil date, NOAA solar position
+  // method. dayNumber counts days since 1970-01-01.
+  function riseOrSet(dayNumber, place, setting) {
     place = place || KATHMANDU;
     var noonGuess = dayNumber * 86400000 + (12 - place.lon / 15) * 3600000;
-    var ms = noonGuess - 6 * 3600000;
+    var ms = noonGuess + (setting ? 6 : -6) * 3600000;
     for (var i = 0; i < 3; i++) {
       var T = (julianDay(ms) - 2451545) / 36525;
       var L0 = norm360(280.46646 + 36000.76983 * T);
@@ -154,10 +154,18 @@
       var lat = place.lat * DEG;
       var cosH = (Math.cos(90.833 * DEG) - Math.sin(lat) * Math.sin(decl)) / (Math.cos(lat) * Math.cos(decl));
       var hourAngle = Math.acos(Math.max(-1, Math.min(1, cosH))) / DEG;
-      var minutes = 720 - 4 * (place.lon + hourAngle) - eqTime;
+      var minutes = 720 - 4 * (place.lon + (setting ? -hourAngle : hourAngle)) - eqTime;
       ms = dayNumber * 86400000 + minutes * 60000;
     }
     return ms;
+  }
+
+  function sunrise(dayNumber, place) {
+    return riseOrSet(dayNumber, place, false);
+  }
+
+  function sunset(dayNumber, place) {
+    return riseOrSet(dayNumber, place, true);
   }
 
   // Tithi in force at Kathmandu sunrise on a civil date.
@@ -185,6 +193,7 @@
     moonLongitude: moonLongitude,
     elongation: elongation,
     sunrise: sunrise,
+    sunset: sunset,
     tithiOn: tithiOn
   };
 

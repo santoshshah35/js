@@ -6,12 +6,18 @@
  */
 "use strict";
 
-var VERSION = "patro-v1";
+var VERSION = "patro-v2";
 var FILES = [
   "./",
   "index.html",
   "styles.css",
-  "app.js",
+  "ui/core.js",
+  "ui/calendar.js",
+  "ui/upcoming.js",
+  "ui/rashifal.js",
+  "ui/converter.js",
+  "ui/markets.js",
+  "ui/shell.js",
   "manifest.webmanifest",
   "icons/icon-180.png",
   "icons/icon-512.png",
@@ -20,6 +26,7 @@ var FILES = [
   "lib/tithi.js",
   "lib/events.js",
   "lib/lunar.js",
+  "lib/upcoming.js",
   "lib/rashifal.js",
   "lib/rates.js"
 ];

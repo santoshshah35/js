@@ -33,33 +33,60 @@
     </div>
   </header>
 
-  <main class="layout">
-    <section class="calendar" aria-labelledby="month-title">
-      <div class="calendar-nav">
-        <button type="button" class="icon-btn" id="prev-month" aria-label="Previous month">‹</button>
-        <div class="month-heading">
-          <h1 id="month-title"></h1>
-          <p id="month-subtitle"></p>
+  <button type="button" class="event-strip" id="event-strip" hidden></button>
+
+  <main>
+    <div class="layout" data-view="calendar">
+      <section class="calendar" aria-labelledby="month-title">
+        <div class="calendar-nav">
+          <button type="button" class="icon-btn" id="prev-month" aria-label="Previous month">‹</button>
+          <div class="month-heading">
+            <h1 id="month-title"></h1>
+            <p id="month-subtitle"></p>
+          </div>
+          <button type="button" class="icon-btn" id="next-month" aria-label="Next month">›</button>
         </div>
-        <button type="button" class="icon-btn" id="next-month" aria-label="Next month">›</button>
-      </div>
-      <div class="calendar-controls">
-        <label class="sr-only" for="year-select">Year</label>
-        <select id="year-select"></select>
-        <label class="sr-only" for="month-select">Month</label>
-        <select id="month-select"></select>
-        <button type="button" class="btn" id="go-today"></button>
-      </div>
-      <div class="grid" id="weekday-row"></div>
-      <div class="grid days" id="days"></div>
-    </section>
+        <div class="calendar-controls">
+          <label class="sr-only" for="year-select">Year</label>
+          <select id="year-select"></select>
+          <label class="sr-only" for="month-select">Month</label>
+          <select id="month-select"></select>
+          <button type="button" class="btn" id="go-today"></button>
+        </div>
+        <p class="estimate-note" id="estimate-note" hidden></p>
+        <div class="grid" id="weekday-row"></div>
+        <div class="grid days" id="days"></div>
+      </section>
 
-    <aside class="side">
-      <section class="card day-detail" id="day-detail" aria-live="polite"></section>
+      <aside class="side">
+        <section class="card day-detail" id="day-detail" aria-live="polite"></section>
+        <section class="card">
+          <h2 id="events-title"></h2>
+          <ul class="event-list" id="event-list"></ul>
+        </section>
+      </aside>
+    </div>
 
+    <div class="screen" data-view="rashifal" hidden>
+      <section class="card" aria-labelledby="rashifal-title">
+        <div class="screen-head">
+          <button type="button" class="icon-btn" id="rashifal-prev">‹</button>
+          <div class="screen-title">
+            <h1 id="rashifal-title"></h1>
+            <p id="rashifal-date"></p>
+          </div>
+          <button type="button" class="icon-btn" id="rashifal-next">›</button>
+        </div>
+        <p class="moon-line" id="rashifal-moon"></p>
+        <ul class="rashi-grid" id="rashi-grid"></ul>
+        <p class="fineprint" id="rashifal-note"></p>
+      </section>
+    </div>
+
+    <div class="screen narrow" data-view="converter" hidden>
       <section class="card">
-        <h2 id="converter-title"></h2>
-        <div class="converter-tabs" role="tablist">
+        <h1 class="card-title" id="converter-title"></h1>
+        <div class="segmented" role="tablist">
           <button type="button" role="tab" id="tab-bs2ad" aria-selected="true"></button>
           <button type="button" role="tab" id="tab-ad2bs" aria-selected="false"></button>
         </div>
@@ -71,54 +98,131 @@
           </div>
           <button type="submit" class="btn btn-primary" id="conv-submit"></button>
           <p class="converter-result" id="conv-result" role="status"></p>
+          <button type="button" class="link-btn" id="conv-show" hidden></button>
         </form>
       </section>
+    </div>
 
-      <section class="card">
-        <h2 id="events-title"></h2>
-        <ul class="event-list" id="event-list"></ul>
-      </section>
-    </aside>
-
-    <div class="extras">
-      <section class="card rashifal" aria-labelledby="rashifal-title">
-        <div class="card-head">
-          <h2 id="rashifal-title"></h2>
-          <p class="muted" id="rashifal-moon"></p>
-        </div>
-        <ul class="rashi-grid" id="rashi-grid"></ul>
-        <p class="fineprint" id="rashifal-note"></p>
-      </section>
-
+    <div class="screen" data-view="forex" hidden>
       <section class="card" aria-labelledby="forex-title">
         <div class="card-head">
-          <h2 id="forex-title"></h2>
+          <h1 class="card-title" id="forex-title"></h1>
           <p class="muted" id="forex-meta"></p>
         </div>
         <div id="forex-body"></div>
       </section>
 
+      <section class="card" aria-labelledby="calc-title">
+        <h2 class="card-title" id="calc-title"></h2>
+        <form class="calc" id="calc-form" novalidate>
+          <div class="segmented">
+            <button type="button" id="calc-to-npr" aria-pressed="true"></button>
+            <button type="button" id="calc-from-npr" aria-pressed="false"></button>
+          </div>
+          <div class="calc-fields">
+            <input type="number" id="calc-amount" inputmode="decimal" min="0" step="any">
+            <select id="calc-currency"></select>
+          </div>
+          <p class="calc-result" id="calc-result" aria-live="polite"></p>
+          <p class="fineprint" id="calc-basis"></p>
+        </form>
+      </section>
+
       <section class="card" aria-labelledby="gold-title">
         <div class="card-head">
-          <h2 id="gold-title"></h2>
+          <h2 class="card-title" id="gold-title"></h2>
           <p class="muted" id="gold-meta"></p>
         </div>
         <div id="gold-body"></div>
       </section>
     </div>
+
+    <div class="screen narrow" data-view="fuel" hidden>
+      <section class="card" aria-labelledby="fuel-title">
+        <div class="card-head">
+          <h1 class="card-title" id="fuel-title"></h1>
+          <p class="muted" id="fuel-meta"></p>
+        </div>
+        <div id="fuel-body"></div>
+      </section>
+    </div>
+
+    <div class="screen narrow" data-view="events" hidden>
+      <section class="card" aria-labelledby="upcoming-title">
+        <h1 class="card-title" id="upcoming-title"></h1>
+        <div id="upcoming-list"></div>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <p id="footer-note"></p>
+    </footer>
   </main>
 
-  <footer class="footer">
-    <p id="footer-note"></p>
-  </footer>
+  <nav class="bottom-nav" aria-label="Main">
+    <button type="button" class="nav-item" id="nav-calendar" data-target="calendar">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+      <span class="nav-label"></span>
+    </button>
+    <button type="button" class="nav-item" id="nav-rashifal" data-target="rashifal">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 14.6A8 8 0 1 1 9.4 4.5a6.4 6.4 0 0 0 10.1 10.1z"/><path d="M17 3.5l.6 1.5 1.5.6-1.5.6-.6 1.5-.6-1.5-1.5-.6 1.5-.6z"/></svg>
+      <span class="nav-label"></span>
+    </button>
+    <button type="button" class="nav-item" id="nav-converter" data-target="converter">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15M15.5 4.5 19 8l-3.5 3.5M20 16H5M8.5 12.5 5 16l3.5 3.5"/></svg>
+      <span class="nav-label"></span>
+    </button>
+    <button type="button" class="nav-item" id="nav-forex" data-target="forex">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v5M18 9.5v5"/></svg>
+      <span class="nav-label"></span>
+    </button>
+    <button type="button" class="nav-item" id="nav-fuel" data-target="fuel">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20.5V5a1.5 1.5 0 0 1 1.5-1.5h6A1.5 1.5 0 0 1 14 5v15.5M3.5 20.5h12M7.5 7.5h4v3.5h-4zM14 10h1.5a2 2 0 0 1 2 2v4.5a1.5 1.5 0 0 0 3 0V8.5L18 6"/></svg>
+      <span class="nav-label"></span>
+    </button>
+    <button type="button" class="nav-item" id="nav-more" aria-haspopup="dialog" aria-expanded="false" aria-controls="more-sheet">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <span class="nav-label"></span>
+    </button>
+  </nav>
+
+  <div class="sheet-backdrop" id="more-sheet" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="more-title">
+      <h2 id="more-title"></h2>
+      <div class="setting">
+        <p class="setting-label" id="theme-label"></p>
+        <div class="segmented three" role="radiogroup" aria-labelledby="theme-label">
+          <button type="button" role="radio" id="theme-system"></button>
+          <button type="button" role="radio" id="theme-light"></button>
+          <button type="button" role="radio" id="theme-dark"></button>
+        </div>
+      </div>
+      <div class="setting">
+        <p class="setting-label" id="lang-label"></p>
+        <div class="segmented" role="radiogroup" aria-labelledby="lang-label">
+          <button type="button" role="radio" id="lang-ne" lang="ne">नेपाली</button>
+          <button type="button" role="radio" id="lang-en" lang="en">English</button>
+        </div>
+      </div>
+      <p class="fineprint" id="about-text"></p>
+      <button type="button" class="btn sheet-close" id="sheet-close"></button>
+    </div>
+  </div>
 
   <script src="lib/bs-data.js"></script>
   <script src="lib/bs.js"></script>
   <script src="lib/tithi.js"></script>
   <script src="lib/events.js"></script>
   <script src="lib/lunar.js"></script>
+  <script src="lib/upcoming.js"></script>
   <script src="lib/rashifal.js"></script>
   <script src="lib/rates.js"></script>
-  <script src="app.js"></script>
+  <script src="ui/core.js"></script>
+  <script src="ui/calendar.js"></script>
+  <script src="ui/upcoming.js"></script>
+  <script src="ui/rashifal.js"></script>
+  <script src="ui/converter.js"></script>
+  <script src="ui/markets.js"></script>
+  <script src="ui/shell.js"></script>
 </body>
 </html>

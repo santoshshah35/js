@@ -1,16 +1,22 @@
 /*
- * Days in each Bikram Sambat month, Baisakh..Chaitra, for 2000-2083 BS.
+ * Days in each Bikram Sambat month, Baisakh..Chaitra, for 2000-2100 BS.
  *
- * Generated from nepali-date-converter@3.4.0 (MIT, github.com/subeshb1/Nepali-Date)
- * and cross-checked month by month against bikram-sambat@1.8.1 (Apache-2.0,
- * github.com/medic/bikram-sambat). The two disagree from 2084 BS onward, where no
- * official calendar has been published yet, so the range stops at 2083.
+ * 2000-2083: from nepali-date-converter@3.4.0 (MIT,
+ * github.com/subeshb1/Nepali-Date), checked month by month against
+ * bikram-sambat@1.8.1 (Apache-2.0, github.com/medic/bikram-sambat).
+ *
+ * 2084-2100: no official calendar is published yet. These rows are
+ * computed from Surya Siddhanta sankrantis by lib/surya.js, which reproduces
+ * all but a handful of the published months; regenerate them with
+ * tools/project-bs.js. The app labels these years as estimated.
  */
 (function (root) {
   "use strict";
 
   var data = {
     firstYear: 2000,
+    // First year whose month lengths are computed, not published.
+    projectedFrom: 2084,
     // 1 Baisakh 2000 BS
     epochAD: { year: 1943, month: 4, day: 14 },
     monthLengths: [
@@ -98,6 +104,23 @@
     [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31], // 2081
     [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30], // 2082
     [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30], // 2083
+    [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31], // 2084
+    [30, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31], // 2085
+    [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30], // 2086
+    [31, 31, 32, 31, 32, 30, 30, 29, 30, 29, 30, 30], // 2087
+    [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31], // 2088
+    [30, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31], // 2089
+    [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30], // 2090
+    [31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30], // 2091
+    [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31], // 2092
+    [31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 29, 31], // 2093
+    [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30], // 2094
+    [31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30], // 2095
+    [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31], // 2096
+    [31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30], // 2097
+    [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30], // 2098
+    [31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30], // 2099
+    [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31], // 2100
     ]
   };
 

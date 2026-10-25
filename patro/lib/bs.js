@@ -114,6 +114,8 @@
   var api = {
     FIRST_YEAR: FIRST_YEAR,
     LAST_YEAR: LAST_YEAR,
+    // Years from here on are computed, not taken from a published calendar.
+    PROJECTED_FROM: DATA.projectedFrom || LAST_YEAR + 1,
     MONTHS_NE: MONTHS_NE,
     MONTHS_EN: MONTHS_EN,
     WEEKDAYS_NE: WEEKDAYS_NE,
