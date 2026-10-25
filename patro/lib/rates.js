@@ -12,6 +12,8 @@
   "use strict";
 
   var NRB_API = "https://www.nrb.org.np/api/forex/v1/rates";
+  // Tried when the main endpoint fails: the feed NRB's own mobile app uses.
+  var NRB_APP_API = "https://www.nrb.org.np/api/forex/v1/app-rate";
   var NRB_PAGE = "https://www.nrb.org.np/forex/";
   var GOLD_URL = "https://www.fenegosida.org/";
   var FUEL_URLS = ["https://noc.org.np/retailprice", "https://noc.org.np/"];
@@ -44,23 +46,56 @@
    * @param {string|object} body JSON text or parsed object
    * @returns {{date:string, published:string, rates:{iso3:string, name:string, unit:number, buy:number, sell:number}[]}|null}
    */
+  function toRate(r) {
+    if (!r || typeof r !== "object") return null;
+    var c = r.currency && typeof r.currency === "object" ? r.currency : r;
+    var rate = {
+      iso3: c.iso3 || c.ISO3 || c.code,
+      name: c.name || c.iso3 || c.code,
+      unit: Number(c.unit) || 1,
+      buy: toNumber(r.buy !== undefined ? r.buy : r.buying),
+      sell: toNumber(r.sell !== undefined ? r.sell : r.selling)
+    };
+    return rate.iso3 && rate.buy !== null && rate.sell !== null ? rate : null;
+  }
+
+  function validRates(list) {
+    return (Array.isArray(list) ? list : []).map(toRate).filter(Boolean);
+  }
+
+  /**
+   * Latest day of rates from an NRB forex API response. Accepts the rates
+   * nested by day ({data: {payload: [{date, rates: [...]}]}}) or a flat list
+   * of rates, since NRB's endpoints differ.
+   * @param {string|object} body JSON text or parsed object
+   * @returns {{date:string|null, published:string|null, rates:{iso3:string, name:string, unit:number, buy:number, sell:number}[]}|null}
+   */
   function parseForex(body) {
-    var json = typeof body === "string" ? JSON.parse(body) : body;
-    var payload = json && json.data && json.data.payload;
-    if (!payload || !payload.length) return null;
-    var latest = payload.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0];
-    var rates = (latest.rates || []).map(function (r) {
-      var c = r.currency || {};
-      return {
-        iso3: c.iso3,
-        name: c.name,
-        unit: Number(c.unit) || 1,
-        buy: toNumber(r.buy),
-        sell: toNumber(r.sell)
-      };
-    }).filter(function (r) { return r.iso3 && r.buy !== null && r.sell !== null; });
-    if (!rates.length) return null;
-    return { date: latest.date, published: latest.published_on || latest.date, rates: rates };
+    var json = body;
+    if (typeof body === "string") {
+      try {
+        json = JSON.parse(body);
+      } catch (e) {
+        throw new Error(/^\s*</.test(body) ? "The bank sent a web page instead of rates" : "The bank's reply was not readable");
+      }
+    }
+    var list = json && json.data && Array.isArray(json.data.payload) ? json.data.payload
+      : json && Array.isArray(json.payload) ? json.payload
+      : json && Array.isArray(json.data) ? json.data
+      : Array.isArray(json) ? json : null;
+    if (!list || !list.length) return null;
+
+    var days = list.some(function (d) { return d && Array.isArray(d.rates); })
+      ? list.filter(function (d) { return d && Array.isArray(d.rates); })
+      : [{ date: (json.data && json.data.date) || json.date || null, rates: list }];
+    days.sort(function (a, b) { return String(a.date) < String(b.date) ? 1 : -1; });
+    for (var i = 0; i < days.length; i++) {
+      var rates = validRates(days[i].rates);
+      if (rates.length) {
+        return { date: days[i].date || null, published: days[i].published_on || days[i].date || null, rates: rates };
+      }
+    }
+    return null;
   }
 
   /**
@@ -217,10 +252,24 @@
    * @returns {Promise<{data:object, cachedAt:number|null}>}
    */
   function loadForex(dayNumber) {
-    var url = NRB_API + "?page=1&per_page=10&from=" + isoDate(dayNumber - 7) + "&to=" + isoDate(dayNumber);
-    return httpGet(url).then(function (body) {
-      var data = parseForex(body);
-      if (!data) throw new Error("No rates published");
+    var urls = [
+      NRB_API + "?page=1&per_page=10&from=" + isoDate(dayNumber - 7) + "&to=" + isoDate(dayNumber),
+      NRB_APP_API
+    ];
+    function attempt(i) {
+      return httpGet(urls[i]).then(function (body) {
+        var data = parseForex(body);
+        if (!data) throw new Error("No rates published");
+        if (!data.date) data.date = isoDate(dayNumber);
+        return data;
+      }).catch(function (err) {
+        if (i + 1 < urls.length) {
+          return attempt(i + 1).catch(function () { throw err; });
+        }
+        throw err;
+      });
+    }
+    return attempt(0).then(function (data) {
       saveCache("patro.forex", data);
       return { data: data, cachedAt: null };
     }).catch(function (err) {

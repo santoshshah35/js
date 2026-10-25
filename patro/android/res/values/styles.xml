@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Patro</string>
+    <string name="widget_name">आजको पात्रो</string>
+    <string name="widget_open_app">मिति हेर्न Patro खोल्नुहोस्</string>
 
     <!-- Light theme; values-night/styles.xml swaps in the dark one, and the
          WebView passes the choice on to the page as prefers-color-scheme. -->

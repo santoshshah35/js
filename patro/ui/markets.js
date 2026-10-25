@@ -54,6 +54,7 @@
       goldError: "यहाँबाट मूल्य लोड गर्न सकिएन। महासंघको वेबसाइटमा हेर्नुहोस्:",
       fuelError: "यहाँबाट मूल्य लोड गर्न सकिएन। नेपाल आयल निगमको वेबसाइटमा हेर्नुहोस्:",
       appHint: "Patro एन्ड्रोइड एपमा यी दर आफैं लोड हुन्छन्।",
+      reason: "कारण",
       goldSource: "स्रोत: नेपाल सुनचाँदी व्यवसायी महासंघ",
       forexSource: "स्रोत: नेपाल राष्ट्र बैंक",
       fuelSource: "स्रोत: नेपाल आयल निगम"
@@ -92,17 +93,19 @@
       goldError: "Couldn't load prices here. See FENEGOSIDA:",
       fuelError: "Couldn't load prices here. See Nepal Oil Corporation:",
       appHint: "The Patro Android app loads these rates automatically.",
+      reason: "Reason",
       goldSource: "Source: Federation of Nepal Gold and Silver Dealers' Association",
       forexSource: "Source: Nepal Rastra Bank",
       fuelSource: "Source: Nepal Oil Corporation"
     }
   });
 
-  function renderError(box, message, href) {
+  function renderError(box, message, href, reason) {
     var p = el("p", "notice", message + " ");
     p.appendChild(UI.link(href));
     box.appendChild(p);
     if (!root.PatroNative) box.appendChild(el("p", "fineprint", t("appHint")));
+    else if (reason) box.appendChild(el("p", "fineprint", t("reason") + ": " + reason));
   }
 
   function sortedRates() {
@@ -123,7 +126,7 @@
     if (!f) { meta.textContent = t("loading"); return; }
     if (f.error) {
       meta.textContent = "";
-      renderError(box, t("forexError"), Rates.NRB_PAGE);
+      renderError(box, t("forexError"), Rates.NRB_PAGE, f.reason);
       return;
     }
     var parts = f.data.date.split("-").map(Number);
@@ -244,7 +247,7 @@
     if (!entry) { meta.textContent = t("loading"); return; }
     if (entry.error) {
       meta.textContent = "";
-      renderError(box, t(errorKey), href);
+      renderError(box, t(errorKey), href, entry.reason);
       return;
     }
     meta.textContent = entry.cachedAt ? UI.fill(t("savedCopy"), { date: UI.dateOfMoment(entry.cachedAt) }) : unitNote;
@@ -286,7 +289,7 @@
     function settle(key, promise, render) {
       promise
         .then(function (r) { data[key] = r; })
-        .catch(function () { data[key] = { error: true }; })
+        .catch(function (err) { data[key] = { error: true, reason: err && err.message }; })
         .then(render);
     }
     settle("forex", Rates.loadForex(BS.nepalToday()), function () { renderForex(); renderCalculator(); });

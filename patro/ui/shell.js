@@ -70,11 +70,15 @@
     root.scrollTo(0, 0);
   }
 
-  // Each screen gets a history entry, so the phone's back button returns to
-  // the previous one.
+  // Switching screens replaces the address instead of adding a history entry,
+  // so the phone's back button leaves the app rather than stepping back
+  // through every tab visited.
   UI.navigate = function (view) {
     if (view === UI.state.view) { root.scrollTo(0, 0); return; }
-    root.location.hash = view;
+    try {
+      root.history.replaceState(null, "", "#" + view);
+    } catch (e) { /* some embedded views refuse it; the screen still switches */ }
+    show(view);
   };
 
   // ---- Theme ----
@@ -129,11 +133,18 @@
   }
 
   function closeSheet() {
-    if ($("more-sheet").hidden) return;
+    if ($("more-sheet").hidden) return false;
     $("more-sheet").hidden = true;
     $("nav-more").setAttribute("aria-expanded", "false");
     $("nav-more").focus();
+    return true;
   }
+
+  // The Android app asks this before closing on the back button: true means
+  // the page used the press (to close the settings sheet).
+  root.__patroBack = function () {
+    return closeSheet();
+  };
 
   function renderNav() {
     [["calendar", "navCalendar"], ["rashifal", "navRashifal"], ["converter", "navConverter"],
@@ -168,6 +179,7 @@
     UI.converter.init();
     UI.markets.init();
     UI.feed.init();
+    UI.widget.init();
     renderNav();
     renderSheet();
     show(viewFromHash());

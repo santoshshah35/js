@@ -6,7 +6,7 @@
  */
 "use strict";
 
-var VERSION = "patro-v3";
+var VERSION = "patro-v4";
 var FILES = [
   "./",
   "index.html",
@@ -18,6 +18,7 @@ var FILES = [
   "ui/converter.js",
   "ui/markets.js",
   "ui/feed.js",
+  "ui/widget.js",
   "ui/shell.js",
   "manifest.webmanifest",
   "icons/icon-180.png",

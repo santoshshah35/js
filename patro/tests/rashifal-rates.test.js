@@ -83,3 +83,17 @@ test("a page without recognisable prices gives null", () => {
   // Implausible numbers are rejected rather than shown.
   assert.equal(Rates.parseGold("FINE GOLD per 1 tola 12"), null);
 });
+
+test("a flat list of rates is accepted too", () => {
+  const fx = Rates.parseForex({ data: [
+    { iso3: "USD", name: "U.S. Dollar", unit: 1, buy: 141.1, sell: 141.7 },
+    { currency: { iso3: "INR", name: "Indian Rupee", unit: 100 }, buying: "160", selling: "160.15" },
+    { iso3: "BAD" }
+  ], date: "2026-10-25" });
+  assert.deepEqual(fx.rates.map((r) => r.iso3), ["USD", "INR"]);
+  assert.equal(fx.rates[1].sell, 160.15);
+});
+
+test("a web page instead of JSON gives a readable reason", () => {
+  assert.throws(() => Rates.parseForex("<!doctype html><title>Just a moment</title>"), /web page/);
+});

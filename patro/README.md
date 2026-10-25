@@ -16,6 +16,8 @@ Patro. Not affiliated with Hamro Patro.
 - BS ↔ AD date converter
 - Fixed-date national days (New Year, Republic Day, Constitution Day, ...)
 - Bottom menu: Calendar, Rashifal, Dates, Exchange, Fuel, More
+- Android home-screen widget: today's date, tithi and the next festival
+- Back button leaves the app (closing the settings sheet first if open)
 - Notices and ads managed by an admin in `content/feed.json`, with no app
   update needed (see `content/README.md`)
 - Nepali and English; theme follows the phone, or set Light or Dark under More
