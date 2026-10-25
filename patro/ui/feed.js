@@ -17,6 +17,7 @@
   var DISMISSED_KEY = "patro.feed.dismissed";
   var REFRESH_MS = 30 * 60 * 1000;
   var MAX_DISMISSED = 100;
+  var WIDE_RATIO = 2;
 
   var items = [];
   var lastAttempt = 0;
@@ -58,7 +59,15 @@
       img.src = item.image;
       img.alt = "";
       img.loading = "lazy";
-      img.addEventListener("error", function () { img.hidden = true; });
+      img.addEventListener("error", function () {
+        img.hidden = true;
+        box.classList.add("no-image");
+      });
+      // Wide banners (like 2160x300) run full width above the text instead of
+      // being cropped into the small square on the left.
+      img.addEventListener("load", function () {
+        if (img.naturalHeight && img.naturalWidth / img.naturalHeight >= WIDE_RATIO) box.classList.add("feed-wide");
+      });
       box.appendChild(img);
     }
     var body = el("div", "feed-body");

@@ -8,7 +8,7 @@
       "body": { "ne": "सबै सामानमा २०% छुट।", "en": "20% off everything." },
       "link": "https://www.example.com/tihar",
       "cta": { "ne": "हेर्नुहोस्", "en": "See offer" },
-      "image": "https://github.com/santoshshah35/js/blob/claude/new-session-94tzzd/patro/content/nexus-traders.gif",
+      "image": "https://raw.githubusercontent.com/santoshshah35/js/claude/new-session-94tzzd/patro/content/nexus-traders.gif",
       "start": "2026-11-01",
       "end": "2026-11-12"
     }

@@ -380,6 +380,11 @@ button:focus-visible, select:focus-visible, input:focus-visible, .day:focus-visi
   border: 0; background: transparent; color: var(--muted); font-size: 1.3rem; line-height: 1; cursor: pointer;
 }
 .feed-close:hover { background: var(--surface-2); color: var(--text); }
+.feed-card.feed-wide { flex-direction: column; gap: 0; }
+.feed-wide .feed-image { width: 100%; max-width: 100%; height: auto; object-fit: contain; }
+.feed-wide .feed-body { padding: 12px 16px 14px; }
+/* Keep the close button off the banner, where it would hide the sponsor's logo. */
+.feed-wide .feed-close { top: auto; bottom: 8px; }
 
 /* Tab change by swipe */
 @media (prefers-reduced-motion: no-preference) {
