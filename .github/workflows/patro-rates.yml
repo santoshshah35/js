@@ -1,0 +1,51 @@
+# Fetches exchange, gold and fuel rates for the Patro app every three hours
+# and commits patro/content/rates.json, which the app downloads. The phone
+# then never has to reach the source sites itself.
+#
+# Scheduled runs happen only on the default branch (main). A push that
+# changes the fetcher also runs it, on that branch.
+name: Patro rates
+
+on:
+  schedule:
+    - cron: "20 */3 * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - patro/tools/fetch-rates.js
+      - patro/lib/rates.js
+      - .github/workflows/patro-rates.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: patro-rates-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Fetch rates
+        run: node patro/tools/fetch-rates.js
+
+      - name: Commit rates.json if it changed
+        run: |
+          git add patro/content/rates.json
+          if git diff --cached --quiet; then
+            echo "No change to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update Patro rates"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"

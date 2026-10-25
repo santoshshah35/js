@@ -37,6 +37,15 @@
   var GOLD_URL = "https://www.fenegosida.org/";
   var FUEL_URLS = ["https://noc.org.np/retailprice", "https://noc.org.np/"];
   var FUEL_PAGE = "https://noc.org.np/";
+  // Rates collected every few hours by tools/fetch-rates.js on GitHub's
+  // servers (see .github/workflows/patro-rates.yml). Read first, because it
+  // works from any network; the sources are tried directly only when it is
+  // missing or more than MIRROR_FRESH_HOURS old.
+  var MIRROR_URLS = [
+    "https://raw.githubusercontent.com/santoshshah35/js/main/patro/content/rates.json",
+    "https://raw.githubusercontent.com/santoshshah35/js/claude/new-session-94tzzd/patro/content/rates.json"
+  ];
+  var MIRROR_FRESH_HOURS = 48;
 
   // ---- Parsing (pure; tested in Node) ----
 
@@ -323,7 +332,72 @@
    * @param {number} dayNumber Nepal's date as days since 1970-01-01
    * @returns {Promise<{data:object, cachedAt:number|null}>}
    */
+  var mirrorPromise = null;
+
+  // The collected rates file, fetched once per app start; null if unavailable.
+  function loadMirror() {
+    if (!mirrorPromise) {
+      var attempt = function (i) {
+        return httpGet(MIRROR_URLS[i]).then(function (body) {
+          var doc = JSON.parse(body);
+          if (!doc || doc.version !== 1) throw new Error("Unknown rates file");
+          return doc;
+        }).catch(function (err) {
+          if (i + 1 < MIRROR_URLS.length) return attempt(i + 1);
+          throw err;
+        });
+      };
+      mirrorPromise = attempt(0).catch(function () { return null; });
+    }
+    return mirrorPromise;
+  }
+
+  function mirrorEntry(doc, key, check) {
+    var entry = doc && doc[key];
+    if (!entry || !entry.data || !entry.fetchedAt) return null;
+    var data = check(entry.data);
+    if (!data) return null;
+    var age = Date.now() - Date.parse(entry.fetchedAt);
+    return { data: data, at: Date.parse(entry.fetchedAt), fresh: age >= 0 && age < MIRROR_FRESH_HOURS * 3600000 };
+  }
+
+  var CHECKS = {
+    forex: function (d) {
+      var parsed = parseForex({ data: { payload: [{ date: d.date, rates: d.rates }] } });
+      if (parsed) parsed.source = d.source === "market" ? "market" : "nrb";
+      return parsed;
+    },
+    gold: function (d) {
+      var ok = ["fineGold", "tejabiGold", "silver"].some(function (k) { return typeof d[k] === "number" && d[k] > 0; });
+      return ok ? d : null;
+    },
+    fuel: function (d) {
+      var ok = ["petrol", "diesel"].some(function (k) { return typeof d[k] === "number" && d[k] > 0; });
+      return ok ? d : null;
+    }
+  };
+
+  // Fresh collected copy first, then the direct source, then an older
+  // collected copy, then the copy saved on this device.
+  function viaMirror(key, direct) {
+    return loadMirror().then(function (doc) {
+      var entry = mirrorEntry(doc, key, CHECKS[key]);
+      if (entry && entry.fresh) {
+        saveCache("patro." + key, entry.data);
+        return { data: entry.data, cachedAt: null };
+      }
+      return direct().catch(function (err) {
+        if (entry) return { data: entry.data, cachedAt: entry.at };
+        throw err;
+      });
+    });
+  }
+
   function loadForex(dayNumber) {
+    return viaMirror("forex", function () { return loadForexDirect(dayNumber); });
+  }
+
+  function loadForexDirect(dayNumber) {
     var urls = [
       NRB_API + "?page=1&per_page=10&from=" + isoDate(dayNumber - 7) + "&to=" + isoDate(dayNumber),
       NRB_APP_API
@@ -373,6 +447,10 @@
   }
 
   function loadGold() {
+    return viaMirror("gold", loadGoldDirect);
+  }
+
+  function loadGoldDirect() {
     return httpGet(GOLD_URL).then(function (html) {
       var data = parseGold(html);
       if (!data) throw new Error("Prices not found. Page text: " + pageStart(html));
@@ -386,6 +464,10 @@
   }
 
   function loadFuel() {
+    return viaMirror("fuel", loadFuelDirect);
+  }
+
+  function loadFuelDirect() {
     function attempt(i) {
       return httpGet(FUEL_URLS[i]).then(function (html) {
         var data = parseFuel(html);
