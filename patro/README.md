@@ -63,10 +63,13 @@ What each source does from GitHub's servers, as seen in the job logs:
 
 - NRB: connection times out (it accepts only some networks). The job
   falls back to market mid-rates, which the app labels as such.
-- FENEGOSIDA: the home page is a JavaScript app that loads the prices from
-  an API; the job logs the addresses its script uses.
+- FENEGOSIDA: the home page is a JavaScript app; its script loads the
+  prices from `api.fenegosida.org/api/website/v1/Dashboard/today`, which
+  the job (and the app) read directly: fine gold and silver per tola.
 - Nepal Oil Corporation: Cloudflare bot check (HTTP 403), so fuel prices
-  can't be collected automatically.
+  can't be collected automatically. The admin enters them in
+  `content/fuel.json` (see `content/README.md`), and the job publishes
+  them with their effective date.
 
 ## iPhone
 

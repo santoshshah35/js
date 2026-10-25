@@ -35,6 +35,8 @@
   ];
   var NRB_PAGE = "https://www.nrb.org.np/forex/";
   var GOLD_URL = "https://www.fenegosida.org/";
+  // The endpoint FENEGOSIDA's own home page loads today's rates from.
+  var GOLD_API = "https://api.fenegosida.org/api/website/v1/Dashboard/today";
   var FUEL_URLS = ["https://noc.org.np/retailprice", "https://noc.org.np/"];
   var FUEL_PAGE = "https://noc.org.np/";
   // Rates collected every few hours by tools/fetch-rates.js on GitHub's
@@ -174,6 +176,32 @@
       if (before.length) return before[before.length - 1];
     }
     return null;
+  }
+
+  /**
+   * Gold and silver prices per tola from FENEGOSIDA's rates API, which returns
+   * entries like {rateType: "छापावाल सुन (१ तोला)", todayBaseRatePerGram: 278500,
+   * todayDate: "2026-10-25T04:50:30+00:00"}; per-10-gram entries are skipped.
+   * @returns {{fineGold:number|null, tejabiGold:number|null, silver:number|null, date:string|null}|null}
+   */
+  function parseGoldApi(body) {
+    var list = typeof body === "string" ? JSON.parse(body) : body;
+    if (list && !Array.isArray(list)) list = list.data || list.result || null;
+    if (!Array.isArray(list)) return null;
+    var out = { fineGold: null, tejabiGold: null, silver: null, date: null };
+    list.forEach(function (item) {
+      var type = asciiDigits(String(item && item.rateType || ""));
+      if (!/तोला|tola/i.test(type)) return;
+      var price = toNumber(item.todayBaseRatePerGram !== undefined ? item.todayBaseRatePerGram : item.rate);
+      var key = /तेजाबी|tejabi/i.test(type) ? "tejabiGold"
+        : /सुन|gold/i.test(type) ? "fineGold"
+        : /चाँदी|चादी|silver/i.test(type) ? "silver" : null;
+      if (!key || price === null) return;
+      var range = key === "silver" ? [100, 100000] : [10000, 2000000];
+      if (price >= range[0] && price <= range[1]) out[key] = price;
+      if (item.todayDate && !out.date) out.date = String(item.todayDate).slice(0, 10);
+    });
+    return out.fineGold || out.silver ? out : null;
   }
 
   /**
@@ -451,6 +479,15 @@
   }
 
   function loadGoldDirect() {
+    return httpGet(GOLD_API).then(function (body) {
+      var data = parseGoldApi(body);
+      if (!data) throw new Error("No prices in FENEGOSIDA's reply");
+      saveCache("patro.gold", data);
+      return { data: data, cachedAt: null };
+    }).catch(function () { return loadGoldPage(); });
+  }
+
+  function loadGoldPage() {
     return httpGet(GOLD_URL).then(function (html) {
       var data = parseGold(html);
       if (!data) throw new Error("Prices not found. Page text: " + pageStart(html));
@@ -493,6 +530,8 @@
     FUEL_PAGE: FUEL_PAGE,
     parseFuel: parseFuel,
     parseMarket: parseMarket,
+    parseGoldApi: parseGoldApi,
+    GOLD_API: GOLD_API,
     convertCurrency: convertCurrency,
     loadFuel: loadFuel,
     NRB_PAGE: NRB_PAGE,

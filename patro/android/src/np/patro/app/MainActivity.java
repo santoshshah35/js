@@ -37,7 +37,7 @@ public class MainActivity extends Activity {
 
     private static final String START_URL = "file:///android_asset/www/index.html";
     private static final Set<String> ALLOWED_HOSTS = new HashSet<String>(Arrays.asList(
-            "www.nrb.org.np", "nrb.org.np", "www.fenegosida.org", "fenegosida.org",
+            "www.nrb.org.np", "nrb.org.np", "www.fenegosida.org", "fenegosida.org", "api.fenegosida.org",
             "noc.org.np", "www.noc.org.np"));
     // Market-rate fallback (lib/rates.js) when NRB can't be reached.
     private static final String MARKET_CDN_HOST = "cdn.jsdelivr.net";

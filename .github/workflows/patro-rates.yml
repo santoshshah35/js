@@ -14,6 +14,7 @@ on:
     paths:
       - patro/tools/fetch-rates.js
       - patro/lib/rates.js
+      - patro/content/fuel.json
       - .github/workflows/patro-rates.yml
 
 permissions:

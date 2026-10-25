@@ -125,3 +125,9 @@ test("monthly rashifal follows the Sun's sign for the BS month", () => {
     assert.equal(r.good.length + r.mixed.length + r.bad.length, last - first + 1);
   }
 });
+
+test("FENEGOSIDA's rates API is read per tola, as returned on 2026-10-25", () => {
+  // Verbatim reply from api.fenegosida.org/api/website/v1/Dashboard/today.
+  const reply = '[{"id":16151,"todayDate":"2026-10-25T04:50:30.373+00:00","yestardayDate":"2026-10-19T04:52:59.451+00:00","rateType":"छापावाल सुन (१० ग्राम)","todayBaseRatePerGram":238770.00,"yestardayBaseRatePerGram":248800.00},{"id":16152,"todayDate":"2026-10-25T04:50:30.373+00:00","yestardayDate":"2026-10-19T04:52:59.451+00:00","rateType":"छापावाल सुन (१ तोला)","todayBaseRatePerGram":278500.00,"yestardayBaseRatePerGram":290200.00},{"id":16153,"todayDate":"2026-10-25T04:50:30.373+00:00","yestardayDate":"2026-10-19T04:52:59.451+00:00","rateType":"असली चाँदी दर (१० ग्राम)","todayBaseRatePerGram":3391.00,"yestardayBaseRatePerGram":3588.00},{"id":16154,"todayDate":"2026-10-25T04:50:30.373+00:00","yestardayDate":"2026-10-19T04:52:59.451+00:00","rateType":"असली चाँदी दर (१ तोला)","todayBaseRatePerGram":3955.00,"yestardayBaseRatePerGram":4185.00}]';
+  assert.deepEqual(Rates.parseGoldApi(reply), { fineGold: 278500, tejabiGold: null, silver: 3955, date: "2026-10-25" });
+});

@@ -17,6 +17,9 @@ const path = require("path");
 const Rates = require("../lib/rates.js");
 
 const OUT = path.join(__dirname, "..", "content", "rates.json");
+// Fuel prices entered by the admin, used when NOC can't be read (its site
+// sits behind a Cloudflare bot check). See content/README.md.
+const FUEL_MANUAL = path.join(__dirname, "..", "content", "fuel.json");
 const UA = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36";
 const NRB = "https://www.nrb.org.np/api/forex/v1/rates";
 const NRB_APP = "https://www.nrb.org.np/api/forex/v1/app-rate";
@@ -78,28 +81,21 @@ async function firstGood(label, urls, parse) {
   throw lastError;
 }
 
-// FENEGOSIDA's home page is a single-page app: the HTML is an empty shell
-// and its script loads the prices. Log the endpoints that script refers to,
-// so the parser can read the same data the page shows.
-async function discoverSpaEndpoints(pageUrl) {
+function readManualFuel() {
   try {
-    const html = await get(pageUrl);
-    const scripts = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map((m) => new URL(m[1], pageUrl).href)
-      .filter((u) => new URL(u).host === new URL(pageUrl).host);
-    for (const src of scripts) {
-      const js = await get(src);
-      const urls = new Set();
-      for (const m of js.matchAll(/["'`](https?:\/\/[^"'`\s]{4,200}|\/(?:api|v\d)[^"'`\s]{1,200})["'`]/g)) urls.add(m[1]);
-      console.log(`  ${src}: ${urls.size} address strings`);
-      for (const u of urls) console.log("    " + u);
-      // Context around words that usually name the rate data.
-      for (const word of ["tola", "fine", "tejabi", "silver", "rate"]) {
-        const i = js.toLowerCase().indexOf(word);
-        if (i >= 0) console.log(`    [${word}] …${js.slice(Math.max(0, i - 160), i + 160).replace(/\s+/g, " ")}…`);
-      }
-    }
+    const doc = JSON.parse(fs.readFileSync(FUEL_MANUAL, "utf8"));
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(doc.effective || "")) return null;
+    const p = doc.prices || {};
+    const ok = (v, min, max) => (typeof v === "number" && v >= min && v <= max ? v : null);
+    const data = {
+      petrol: ok(p.petrol, 80, 400), diesel: ok(p.diesel, 80, 400),
+      kerosene: ok(p.kerosene, 80, 400), lpg: ok(p.lpg, 800, 5000),
+      effective: doc.effective, manual: true
+    };
+    return data.petrol || data.diesel ? data : null;
   } catch (err) {
-    console.log("  discovery failed: " + err.message);
+    console.log("content/fuel.json unreadable: " + err.message);
+    return null;
   }
 }
 
@@ -134,26 +130,24 @@ async function main() {
     }
   }
 
-  console.log("FENEGOSIDA rates API (raw):");
   try {
-    const body = await get(GOLD_API);
-    console.log("  " + rawStart(body).slice(0, 3000));
-  } catch (err) {
-    console.log("  failed: " + err.message);
-  }
-
-  try {
-    out.gold = stamp(await firstGood("FENEGOSIDA gold", GOLD, Rates.parseGold));
-  } catch (err) {
-    out.errors.gold = err.message;
-    out.gold = previous.gold || null;
+    out.gold = stamp(await firstGood("FENEGOSIDA gold", [GOLD_API], Rates.parseGoldApi));
+  } catch (apiErr) {
+    try {
+      out.gold = stamp(await firstGood("FENEGOSIDA gold page", GOLD, Rates.parseGold));
+    } catch (err) {
+      out.errors.gold = apiErr.message + "; " + err.message;
+      out.gold = previous.gold || null;
+    }
   }
 
   try {
     out.fuel = stamp(await firstGood("NOC fuel", FUEL, Rates.parseFuel));
   } catch (err) {
     out.errors.fuel = err.message;
-    out.fuel = previous.fuel || null;
+    const manual = readManualFuel();
+    out.fuel = manual ? stamp(manual) : previous.fuel || null;
+    if (manual) console.log("Using admin fuel prices effective " + manual.effective);
   }
 
   // Only rewrite the file (and so commit) when a rate changed, or once a day

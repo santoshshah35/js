@@ -17,6 +17,23 @@ A mistake can't break the app: an entry with a missing or wrong field is
 skipped, and if the whole file is invalid the app keeps the last good copy.
 Check the JSON with any online JSON validator before committing.
 
+## Fuel prices
+
+Nepal Oil Corporation's site blocks automated reading, so fuel prices are
+entered here by hand when NOC announces a change. Edit `fuel.json` like
+this (the numbers below are only an example of the format):
+
+```json
+{
+  "effective": "2026-10-17",
+  "prices": { "petrol": 174, "diesel": 157, "kerosene": 157, "lpg": 1910 }
+}
+```
+
+`effective` is the AD date the prices took effect; prices are in rupees per
+litre (LPG per cylinder) for the Kathmandu valley. Committing the file
+updates the app within a few minutes. Leave a price `null` to hide it.
+
 ## Fields
 
 | Field | Required | Meaning |

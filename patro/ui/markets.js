@@ -39,6 +39,8 @@
       tejabiGold: "तेजाबी सुन",
       silver: "चाँदी",
       perTola: "प्रति तोला",
+      priceDate: "{unit} · {date}",
+      effective: "{date} देखि लागू",
       fuel: "इन्धनको मूल्य",
       petrol: "पेट्रोल",
       diesel: "डिजेल",
@@ -82,6 +84,8 @@
       tejabiGold: "Tejabi gold",
       silver: "Silver",
       perTola: "per tola",
+      priceDate: "{unit} · {date}",
+      effective: "In effect from {date}",
       fuel: "Fuel prices",
       petrol: "Petrol",
       diesel: "Diesel",
@@ -283,15 +287,25 @@
     box.appendChild(el("p", "fineprint", t(sourceKey)));
   }
 
+  // "2026-10-25" as a BS date, or null.
+  function bsDate(iso) {
+    var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+    if (!p) return null;
+    try { return UI.formatBs(BS.toBS(+p[1], +p[2], +p[3])); } catch (e) { return null; }
+  }
+
   function renderGold() {
+    var date = data.gold && data.gold.data && bsDate(data.gold.data.date);
     renderPriceList("gold", data.gold, [["fineGold"], ["tejabiGold"], ["silver"]],
-      "goldError", Rates.GOLD_URL, "goldSource", t("perTola"));
+      "goldError", Rates.GOLD_URL, "goldSource",
+      date ? UI.fill(t("priceDate"), { unit: t("perTola"), date: date }) : t("perTola"));
   }
 
   function renderFuel() {
+    var date = data.fuel && data.fuel.data && bsDate(data.fuel.data.effective);
     renderPriceList("fuel", data.fuel,
       [["petrol", "perLitre"], ["diesel", "perLitre"], ["kerosene", "perLitre"], ["lpg", "perCylinder"]],
-      "fuelError", Rates.FUEL_PAGE, "fuelSource", "");
+      "fuelError", Rates.FUEL_PAGE, "fuelSource", date ? UI.fill(t("effective"), { date: date }) : "");
   }
 
   function renderAll() {
