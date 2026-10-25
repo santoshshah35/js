@@ -1,3 +1,16 @@
 {
-  "items": []
+  "items": [
+    {
+      "id": "ram-store-tihar-2083",
+      "slot": "top",
+      "kind": "ad",
+      "title": { "ne": "राम स्टोर: तिहार विशेष छुट", "en": "Ram Store: Tihar special offer" },
+      "body": { "ne": "सबै सामानमा २०% छुट।", "en": "20% off everything." },
+      "link": "https://www.example.com/tihar",
+      "cta": { "ne": "हेर्नुहोस्", "en": "See offer" },
+      "image": "https://raw.githubusercontent.com/santoshshah35/js/claude/new-session-94tzzd/patro/content/nexus-traders.gif",
+      "start": "2026-11-01",
+      "end": "2026-11-12"
+    }
+  ]
 }
