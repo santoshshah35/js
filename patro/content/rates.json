@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "updatedAt": "2026-10-25T15:56:24.410Z",
+  "forex": {
+    "fetchedAt": "2026-10-25T15:56:24.410Z",
+    "data": {
+      "date": "2026-10-25",
+      "published": null,
+      "rates": [
+        {
+          "iso3": "USD",
+          "name": "U.S. Dollar",
+          "unit": 1,
+          "buy": 151.98,
+          "sell": 151.98
+        },
+        {
+          "iso3": "EUR",
+          "name": "European Euro",
+          "unit": 1,
+          "buy": 170.25,
+          "sell": 170.25
+        },
+        {
+          "iso3": "GBP",
+          "name": "UK Pound Sterling",
+          "unit": 1,
+          "buy": 203.23,
+          "sell": 203.23
+        },
+        {
+          "iso3": "CHF",
+          "name": "Swiss Franc",
+          "unit": 1,
+          "buy": 184.21,
+          "sell": 184.21
+        },
+        {
+          "iso3": "AUD",
+          "name": "Australian Dollar",
+          "unit": 1,
+          "buy": 106.9,
+          "sell": 106.9
+        },
+        {
+          "iso3": "CAD",
+          "name": "Canadian Dollar",
+          "unit": 1,
+          "buy": 108.52,
+          "sell": 108.52
+        },
+        {
+          "iso3": "SGD",
+          "name": "Singapore Dollar",
+          "unit": 1,
+          "buy": 118.99,
+          "sell": 118.99
+        },
+        {
+          "iso3": "JPY",
+          "name": "Japanese Yen",
+          "unit": 10,
+          "buy": 9.69,
+          "sell": 9.69
+        },
+        {
+          "iso3": "CNY",
+          "name": "Chinese Yuan",
+          "unit": 1,
+          "buy": 22.78,
+          "sell": 22.78
+        },
+        {
+          "iso3": "SAR",
+          "name": "Saudi Arabian Riyal",
+          "unit": 1,
+          "buy": 40.53,
+          "sell": 40.53
+        },
+        {
+          "iso3": "QAR",
+          "name": "Qatari Riyal",
+          "unit": 1,
+          "buy": 41.75,
+          "sell": 41.75
+        },
+        {
+          "iso3": "THB",
+          "name": "Thai Baht",
+          "unit": 1,
+          "buy": 4.52,
+          "sell": 4.52
+        },
+        {
+          "iso3": "AED",
+          "name": "UAE Dirham",
+          "unit": 1,
+          "buy": 41.38,
+          "sell": 41.38
+        },
+        {
+          "iso3": "MYR",
+          "name": "Malaysian Ringgit",
+          "unit": 1,
+          "buy": 37.19,
+          "sell": 37.19
+        },
+        {
+          "iso3": "KRW",
+          "name": "South Korean Won",
+          "unit": 100,
+          "buy": 11.48,
+          "sell": 11.48
+        },
+        {
+          "iso3": "SEK",
+          "name": "Swedish Kroner",
+          "unit": 1,
+          "buy": 15.3,
+          "sell": 15.3
+        },
+        {
+          "iso3": "DKK",
+          "name": "Danish Kroner",
+          "unit": 1,
+          "buy": 22.78,
+          "sell": 22.78
+        },
+        {
+          "iso3": "HKD",
+          "name": "Hong Kong Dollar",
+          "unit": 1,
+          "buy": 19.38,
+          "sell": 19.38
+        },
+        {
+          "iso3": "KWD",
+          "name": "Kuwaity Dinar",
+          "unit": 1,
+          "buy": 489.44,
+          "sell": 489.44
+        },
+        {
+          "iso3": "BHD",
+          "name": "Bahrain Dinar",
+          "unit": 1,
+          "buy": 404.19,
+          "sell": 404.19
+        },
+        {
+          "iso3": "OMR",
+          "name": "Omani Rial",
+          "unit": 1,
+          "buy": 395.33,
+          "sell": 395.33
+        },
+        {
+          "iso3": "INR",
+          "name": "Indian Rupee",
+          "unit": 100,
+          "buy": 160.07,
+          "sell": 160.07
+        }
+      ],
+      "source": "market"
+    }
+  },
+  "gold": null,
+  "fuel": null,
+  "errors": {
+    "forex": "fetch failed",
+    "gold": "Prices not found on https://fenegosida.org/",
+    "fuel": "HTTP 403 from https://noc.org.np/"
+  }
+}
