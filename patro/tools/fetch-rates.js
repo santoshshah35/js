@@ -21,6 +21,8 @@ const UA = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Geck
 const NRB = "https://www.nrb.org.np/api/forex/v1/rates";
 const NRB_APP = "https://www.nrb.org.np/api/forex/v1/app-rate";
 const GOLD = ["https://www.fenegosida.org/", "https://fenegosida.org/"];
+// The endpoint FENEGOSIDA's own home page loads today's rates from.
+const GOLD_API = "https://api.fenegosida.org/api/website/v1/Dashboard/today";
 const FUEL = ["https://noc.org.np/retailprice", "https://noc.org.np/"];
 const MARKET = [
   "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/npr.json",
@@ -132,11 +134,17 @@ async function main() {
     }
   }
 
+  console.log("FENEGOSIDA rates API (raw):");
+  try {
+    const body = await get(GOLD_API);
+    console.log("  " + rawStart(body).slice(0, 3000));
+  } catch (err) {
+    console.log("  failed: " + err.message);
+  }
+
   try {
     out.gold = stamp(await firstGood("FENEGOSIDA gold", GOLD, Rates.parseGold));
   } catch (err) {
-    console.log("FENEGOSIDA page script:");
-    await discoverSpaEndpoints(GOLD[0]);
     out.errors.gold = err.message;
     out.gold = previous.gold || null;
   }

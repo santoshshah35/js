@@ -49,6 +49,25 @@ android/build-apk.sh   # writes android/build/patro.apk
 The first build creates a signing key in `android/keystore/`, which is not
 committed. Keep it: Android only installs an update signed with the same key.
 
+## Rates collection
+
+Like other Nepali calendar apps, Patro doesn't make every phone call the
+source sites: NRB refuses connections from outside Nepal, and the others
+block or reshape automated requests. Instead
+`.github/workflows/patro-rates.yml` runs `tools/fetch-rates.js` on GitHub's
+servers every three hours (scheduled runs need the workflow on `main`) and
+commits `content/rates.json`. The app reads that file first and only tries
+the sources directly when it is missing or more than 48 hours old.
+
+What each source does from GitHub's servers, as seen in the job logs:
+
+- NRB: connection times out (it accepts only some networks). The job
+  falls back to market mid-rates, which the app labels as such.
+- FENEGOSIDA: the home page is a JavaScript app that loads the prices from
+  an API; the job logs the addresses its script uses.
+- Nepal Oil Corporation: Cloudflare bot check (HTTP 403), so fuel prices
+  can't be collected automatically.
+
 ## iPhone
 
 An iOS app has to be built and signed on a Mac with Xcode. Instead, Patro
