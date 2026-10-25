@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-25T15:57:49.045Z",
+  "updatedAt": "2026-10-25T16:00:16.902Z",
   "forex": {
-    "fetchedAt": "2026-10-25T15:57:49.045Z",
+    "fetchedAt": "2026-10-25T16:00:16.902Z",
     "data": {
-      "date": "2026-10-24",
+      "date": "2026-10-25",
       "published": null,
       "rates": [
         {
@@ -18,29 +18,29 @@
           "iso3": "EUR",
           "name": "European Euro",
           "unit": 1,
-          "buy": 170.28,
-          "sell": 170.28
+          "buy": 170.25,
+          "sell": 170.25
         },
         {
           "iso3": "GBP",
           "name": "UK Pound Sterling",
           "unit": 1,
-          "buy": 203.34,
-          "sell": 203.34
+          "buy": 203.23,
+          "sell": 203.23
         },
         {
           "iso3": "CHF",
           "name": "Swiss Franc",
           "unit": 1,
-          "buy": 184.23,
-          "sell": 184.23
+          "buy": 184.21,
+          "sell": 184.21
         },
         {
           "iso3": "AUD",
           "name": "Australian Dollar",
           "unit": 1,
-          "buy": 106.92,
-          "sell": 106.92
+          "buy": 106.9,
+          "sell": 106.9
         },
         {
           "iso3": "CAD",
@@ -53,8 +53,8 @@
           "iso3": "SGD",
           "name": "Singapore Dollar",
           "unit": 1,
-          "buy": 118.91,
-          "sell": 118.91
+          "buy": 118.99,
+          "sell": 118.99
         },
         {
           "iso3": "JPY",
@@ -88,8 +88,8 @@
           "iso3": "THB",
           "name": "Thai Baht",
           "unit": 1,
-          "buy": 4.5,
-          "sell": 4.5
+          "buy": 4.52,
+          "sell": 4.52
         },
         {
           "iso3": "AED",
@@ -102,8 +102,8 @@
           "iso3": "MYR",
           "name": "Malaysian Ringgit",
           "unit": 1,
-          "buy": 37.2,
-          "sell": 37.2
+          "buy": 37.19,
+          "sell": 37.19
         },
         {
           "iso3": "KRW",
@@ -137,22 +137,22 @@
           "iso3": "KWD",
           "name": "Kuwaity Dinar",
           "unit": 1,
-          "buy": 489.6,
-          "sell": 489.6
+          "buy": 489.44,
+          "sell": 489.44
         },
         {
           "iso3": "BHD",
           "name": "Bahrain Dinar",
           "unit": 1,
-          "buy": 404.21,
-          "sell": 404.21
+          "buy": 404.19,
+          "sell": 404.19
         },
         {
           "iso3": "OMR",
           "name": "Omani Rial",
           "unit": 1,
-          "buy": 396.47,
-          "sell": 396.47
+          "buy": 395.33,
+          "sell": 395.33
         },
         {
           "iso3": "INR",
