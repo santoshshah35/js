@@ -2,7 +2,7 @@
  * Observances that fall on a fixed calendar date every year.
  *
  * Festivals set by the lunar calendar (Dashain, Tihar, Holi, Teej, ...) move
- * from year to year and are not listed here. Which days are public holidays is
+ * from year to year and live in lunar.js. Which days are public holidays is
  * decided by the Government of Nepal each year, so no holiday status is
  * claimed; only Saturdays are marked as the weekly holiday.
  */

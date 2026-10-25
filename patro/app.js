@@ -4,6 +4,7 @@
   var BS = window.PatroBS;
   var Tithi = window.PatroTithi;
   var Events = window.PatroEvents;
+  var Lunar = window.PatroLunar;
 
   var AD_MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var AD_MONTHS_NE = ["जनवरी", "फेब्रुअरी", "मार्च", "अप्रिल", "मे", "जुन", "जुलाई", "अगस्ट",
@@ -20,13 +21,14 @@
       ad2bs: "ई.सं. → बि.सं.",
       year: "साल",
       day: "गते",
-      events: "यस महिनाका दिवसहरू",
-      noEvents: "यस महिनामा कुनै निश्चित दिवस छैन।",
+      events: "यस महिनाका चाडपर्व र दिवसहरू",
+      noEvents: "यस महिनामा कुनै चाडपर्व वा दिवस छैन।",
+      lunarMonth: "चन्द्र मास",
       sunrise: "सूर्योदय",
       saturday: "सार्वजनिक बिदा (शनिबार)",
       bs: "बि.सं.",
       langButton: "English",
-      footer: "तिथि काठमाडौंको सूर्योदयमा खगोलीय गणनाबाट निकालिएको हो र सूर्योदयको नजिक तिथि फेरिने दिन प्रकाशित पात्रोसँग फरक पर्न सक्छ। दशैं, तिहार जस्ता चन्द्र पात्रोमा आधारित चाडपर्व र सरकारी बिदा समावेश छैनन्।"
+      footer: "तिथि र चाडपर्व काठमाडौंका लागि खगोलीय गणनाबाट निकालिएका हुन्। तिथि सूर्योदयको नजिक फेरिने वर्ष चाडपर्व प्रकाशित पात्रोभन्दा एक दिन फरक पर्न सक्छ। सरकारी बिदा समावेश छैनन्।"
     },
     en: {
       today: "Today",
@@ -36,13 +38,14 @@
       ad2bs: "AD → BS",
       year: "Year",
       day: "Day",
-      events: "National days this month",
-      noEvents: "No fixed-date national days this month.",
+      events: "Festivals and national days this month",
+      noEvents: "No festivals or national days this month.",
+      lunarMonth: "Lunar month",
       sunrise: "Sunrise",
       saturday: "Weekly holiday (Saturday)",
       bs: "BS",
       langButton: "नेपाली",
-      footer: "Tithi is computed astronomically for sunrise in Kathmandu and can differ from a printed panchang on days when it changes close to sunrise. Lunar festivals such as Dashain and Tihar, and government holidays, are not included."
+      footer: "Tithi and festivals are computed astronomically for Kathmandu. In a year when the tithi changes close to sunrise, a festival can be a day off from a printed panchang. Government holidays are not included."
     }
   };
 
@@ -128,6 +131,10 @@
 
   // ---- Calendar ----
 
+  function dayEvents(n, bs, ad) {
+    return Lunar.festivalsOn(n).concat(Events.eventsOn(bs, ad));
+  }
+
   function renderControls() {
     var yearSelect = $("year-select");
     clearChildren(yearSelect);
@@ -190,7 +197,7 @@
       var bs = BS.dayNumberToBs(n);
       var ad = BS.fromDayNumber(n);
       var tithi = Tithi.tithiOn(n);
-      var events = Events.eventsOn(bs, ad);
+      var events = dayEvents(n, bs, ad);
       var w = BS.weekday(n);
 
       var classes = ["day"];
@@ -209,7 +216,9 @@
       if (n === state.selected) cell.setAttribute("aria-pressed", "true");
       cell.appendChild(el("span", "bs", num(bs.day)));
       cell.appendChild(el("span", "ad", String(ad.day)));
-      cell.appendChild(el("span", "tithi", pick(tithi.name)));
+      cell.appendChild(events.length
+        ? el("span", "tithi festival", pick(events[0]))
+        : el("span", "tithi", pick(tithi.name)));
       days.appendChild(cell);
 
       events.forEach(function (ev) { monthEvents.push({ day: bs.day, event: ev }); });
@@ -240,14 +249,15 @@
     var ad = BS.fromDayNumber(n);
     var w = BS.weekday(n);
     var tithi = Tithi.tithiOn(n);
-    var events = Events.eventsOn(bs, ad);
+    var events = dayEvents(n, bs, ad);
+    var lunarMonth = Lunar.monthName(n);
 
     var box = $("day-detail");
     clearChildren(box);
     box.appendChild(el("div", "big", num(bs.day)));
     box.appendChild(el("p", "line", bsMonthName(bs.month) + " " + num(bs.year) + " " + t("bs") + ", " + weekdayName(w)));
     box.appendChild(el("p", "line muted", formatAd(ad)));
-    box.appendChild(el("p", "line", pick(tithi.paksha) + " · " + pick(tithi.name)));
+    box.appendChild(el("p", "line", pick(lunarMonth) + " " + pick(tithi.paksha) + " · " + pick(tithi.name)));
     box.appendChild(el("p", "line muted", t("sunrise") + " " + nepalTimeString(tithi.sunrise)));
 
     var tags = el("div", "tags");

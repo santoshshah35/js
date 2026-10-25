@@ -171,6 +171,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, .day:focus-visi
 }
 .day.sat .bs, .day.has-event .bs { color: var(--holiday); }
 .day.full-moon .tithi, .day.new-moon .tithi { color: var(--text); font-weight: 600; }
+.day .tithi.festival { color: var(--holiday); font-weight: 600; }
 .day.has-event::after {
   content: ""; position: absolute; top: 10px; left: 50%;
   width: 6px; height: 6px; border-radius: 50%; background: var(--holiday);
