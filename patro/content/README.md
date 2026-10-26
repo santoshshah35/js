@@ -6,7 +6,8 @@ change reaches phones without a new app.
 
 | File | What it holds |
 |------|---------------|
-| `feed.json` | Ads and notices |
+| `alerts.json` | Push notifications (breaking news, announcements) |
+| `feed.json` | Ads and notices (readers can't close them) |
 | `events.json` | Your events, public holidays and sait (BS dates) |
 | `fuel.json` | Petrol, diesel, kerosene and LPG prices |
 | `news-sources.json` | RSS feeds the news job reads |
@@ -14,8 +15,10 @@ change reaches phones without a new app.
 
 ## The admin panel (easiest)
 
-Open **More → Admin panel** in the Android app, or `patro/admin/index.html`
-from GitHub Pages, and sign in with a GitHub fine-grained token that has
+The admin panel is a web page (it is not inside the app). Open
+`https://santoshshah35.github.io/js/admin/` once GitHub Pages is on, or
+`https://raw.githack.com/santoshshah35/js/claude/new-session-94tzzd/patro/admin/index.html`
+right away, from any phone or computer browser, and sign in with a GitHub fine-grained token that has
 *Contents: Read and write* (and *Actions: Read and write* for the "Update
 now" buttons) on this repository. Every section is a form; **Save &
 publish** checks the file with the app's own rules and commits it.
@@ -54,7 +57,7 @@ updates the app within a few minutes. Leave a price `null` to hide it.
 
 | Field | Required | Meaning |
 |-------|----------|---------|
-| `id` | yes | Unique name, e.g. `"dashain-offer-2083"`. A closed banner stays closed for its id, so use a new id for a new campaign. |
+| `id` | yes | Unique name, e.g. `"dashain-offer-2083"`. |
 | `slot` | yes | Where it shows: `"top"` (under the festival strip, on every screen), `"rashifal"`, `"forex"` or `"fuel"` (top of that screen). |
 | `kind` | yes | `"notice"` (labelled सूचना) or `"ad"` (labelled विज्ञापन / Sponsored). |
 | `title` | yes | `{ "ne": "...", "en": "..." }`, up to 120 characters. One language is enough; it is used for both. |

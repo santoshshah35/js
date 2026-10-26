@@ -123,3 +123,8 @@ input[type="checkbox"] { width: auto; }
   .pair, .grid2 { grid-template-columns: 1fr; }
   .card { padding: 16px; }
 }
+.btn.big { padding: 12px 18px; font-size: 1.05rem; align-self: flex-start; }
+.compose { border: 1px solid var(--border); border-radius: 12px; }
+.trend-pick { display: flex; flex-direction: column; gap: 6px; }
+.editor h3 { margin: 14px 0 4px; font-size: 1rem; }
+.problems:empty { display: none; }

@@ -18,6 +18,7 @@
   var BRANCH_KEY = "patro.admin.branch";
   var MAX_IMAGE_BYTES = 1024 * 1024;
   var TABS = [
+    ["push", Editors.push],
     ["ads", Editors.ads],
     ["events", Editors.events],
     ["fuel", Editors.fuel],
@@ -127,7 +128,7 @@
     });
     tabs.appendChild(h("button", { type: "button", class: "tab", "data-tab": "jobs", text: "Update now", onclick: function () { showTab("jobs"); } }));
     tabs.appendChild(h("button", { type: "button", class: "tab", "data-tab": "help", text: "Help", onclick: function () { showTab("help"); } }));
-    showTab(current || "ads");
+    showTab(current || "push");
   }
 
   function anyDirty() {
@@ -153,7 +154,7 @@
     var editor = editorOf(id);
     var body = $("body");
     body.replaceChildren();
-    $("save-bar").hidden = !editor;
+    $("save-bar").hidden = !editor || !!editor.autoSave;
     if (id === "jobs") return renderJobs(body);
     if (id === "help") return renderHelp(body);
     $("tab-title").textContent = editor.title;
@@ -201,12 +202,13 @@
     if (!editor || !state || editor.validate(state.model).length) return;
     $("save").disabled = true;
     $("save-state").textContent = "Saving…";
+    if (editor.autoSave) toast("Sending…");
     var text = editor.serialize(state.model);
     gh.write(editor.path, text, "Admin panel: update " + editor.title.toLowerCase() + " (@" + who.login + ")", state.sha)
       .then(function (res) {
         state.sha = res.sha;
         state.dirty = false;
-        toast("Saved. Phones get it the next time Patro opens.", "ok");
+        toast(editor.autoSave ? "Sent. Android phones get it within about 15 minutes." : "Saved. Phones get it the next time Patro opens.", "ok");
       }).catch(function (err) {
         toast(friendly(err), "error");
       }).then(function () {
@@ -240,11 +242,13 @@
         throw err;
       });
     },
-    // The news job's last result per source.
-    newsStatus: function () {
+    // The news job's latest file: per-source results and trending stories.
+    newsDoc: function () {
       return fetch(News.NEWS_URLS[0], { cache: "no-store" }).then(function (r) { return r.json(); })
-        .then(function (doc) { return doc.sources; }).catch(function () { return []; });
-    }
+        .catch(function () { return null; });
+    },
+    // For editors that publish straight away (push notifications).
+    save: function () { save(); }
   };
 
   // ---- Update-now buttons ----
@@ -317,12 +321,6 @@
     root.addEventListener("beforeunload", function (e) {
       if (anyDirty()) { e.preventDefault(); e.returnValue = ""; }
     });
-    // The Android app's back button: leave the panel for the calendar.
-    root.__patroBack = function () {
-      if (anyDirty() && !root.confirm("Leave without saving?")) return true;
-      root.location.href = "../index.html";
-      return true;
-    };
     var token = savedToken();
     var remembered = false;
     try { remembered = !!root.localStorage.getItem(TOKEN_KEY); } catch (e) { remembered = false; }

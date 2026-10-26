@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="np.patro.app"
-    android:versionCode="8"
-    android:versionName="1.7">
+    android:versionCode="9"
+    android:versionName="1.8">
 
     <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="34" />
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Breaking-news notifications, checked in the background. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:label="@string/app_name"
@@ -32,6 +35,11 @@
                 <data android:scheme="patro" android:host="auth" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".AlertJob"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true" />
 
         <receiver
             android:name=".PatroWidget"

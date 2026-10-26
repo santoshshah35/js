@@ -11,6 +11,7 @@
 
   var UI = root.PatroUI;
   var News = root.PatroNews;
+  var Trending = root.PatroTrending;
   var Config = root.PatroConfig;
   var Rates = root.PatroRates;
   var t = UI.t;
@@ -28,7 +29,8 @@
   var DIRECT_PER_SOURCE = 20;
   var DIRECT_PARALLEL = 4;
 
-  var data = { updatedAt: null, sources: [], items: [] };
+  var data = { updatedAt: null, sources: [], items: [], trending: [], topics: [] };
+  var TRENDING_SHOWN = 8;
   var filter = { lang: "all", source: "all", category: "all", query: "" };
   var shown = PAGE;
   var loading = false;
@@ -43,6 +45,10 @@
       newsAllLang: "सबै",
       newsAllSources: "सबै स्रोत",
       newsSaved: "★ सेभ गरिएका",
+      newsTrending: "🔥 ट्रेन्डिङ",
+      trendingTitle: "🔥 ट्रेन्डिङ समाचार",
+      trendingTopics: "चर्चित विषय",
+      newsNoneTrending: "अहिले कुनै समाचार ट्रेन्डिङमा छैन।",
       newsSearch: "समाचार खोज्नुहोस्",
       newsUpdated: "{time} अद्यावधिक",
       newsLoading: "समाचार ल्याउँदै…",
@@ -68,6 +74,10 @@
       newsAllLang: "All",
       newsAllSources: "All sources",
       newsSaved: "★ Saved",
+      newsTrending: "🔥 Trending",
+      trendingTitle: "🔥 Trending news",
+      trendingTopics: "Hot topics",
+      newsNoneTrending: "Nothing is trending right now.",
       newsSearch: "Search news",
       newsUpdated: "Updated {time}",
       newsLoading: "Getting the news…",
@@ -171,9 +181,14 @@
         var doc = {
           version: 1,
           updatedAt: new Date().toISOString(),
-          sources: sources.map(function (s) { return { id: s.id, name: s.name, lang: s.lang, site: s.site, ok: !!ok[s.id] }; }),
+          sources: sources.map(function (s) {
+            return { id: s.id, name: s.name, lang: s.lang, site: s.site, priority: s.priority, ok: !!ok[s.id] };
+          }),
           items: items.sort(function (a, b) { return (b.published || 0) - (a.published || 0); }).slice(0, News.MAX_ITEMS)
         };
+        var hot = Trending.trending(doc.items, Date.now());
+        doc.trending = hot.ids;
+        doc.topics = hot.topics;
         return fromJson(JSON.stringify(doc));
       });
     });
@@ -289,8 +304,9 @@
 
     var cats = $("news-cats");
     UI.clear(cats);
-    ["all"].concat(News.CATEGORIES).concat(["saved"]).forEach(function (c) {
-      var chip = el("button", "chip", c === "saved" ? t("newsSaved") : UI.pick(News.CATEGORY_NAMES[c]));
+    ["all", "trending"].concat(News.CATEGORIES).concat(["saved"]).forEach(function (c) {
+      var label = c === "saved" ? t("newsSaved") : c === "trending" ? t("newsTrending") : UI.pick(News.CATEGORY_NAMES[c]);
+      var chip = el("button", "chip" + (c === "trending" ? " chip-hot" : ""), label);
       chip.type = "button";
       chip.dataset.category = c;
       chip.setAttribute("aria-pressed", String(filter.category === c));
@@ -313,15 +329,87 @@
     $("news-search").setAttribute("aria-label", t("newsSearch"));
   }
 
+  function priorityIds() {
+    return data.sources.filter(function (s) { return s.priority; }).map(function (s) { return s.id; });
+  }
+
+  function byId() {
+    var map = {};
+    data.items.forEach(function (it) { map[it.id] = it; });
+    return map;
+  }
+
+  // Trending stories in the order the news job ranked them.
+  function trendingItems() {
+    var map = byId();
+    return data.trending.map(function (id) { return map[id]; }).filter(Boolean);
+  }
+
   function currentList() {
-    var saved = filter.category === "saved";
-    var pool = saved ? savedItems() : data.items;
-    return News.filterNews(pool, {
+    var c = filter.category;
+    var f = {
       lang: filter.lang,
       source: filter.source,
-      category: saved ? "all" : filter.category,
+      category: c === "saved" || c === "trending" ? "all" : c,
       query: filter.query
+    };
+    if (c === "trending") {
+      var ranked = trendingItems();
+      var keep = News.filterNews(ranked, f).map(function (it) { return it.id; });
+      return ranked.filter(function (it) { return keep.indexOf(it.id) >= 0; });
+    }
+    if (c !== "saved") f.priority = { ids: priorityIds(), now: Date.now() };
+    return News.filterNews(c === "saved" ? savedItems() : data.items, f);
+  }
+
+  // The trending strip at the top of the news screen: hot topics to search
+  // for, and the trending stories side by side.
+  function renderTrending() {
+    var box = $("news-trending");
+    var stories = trendingItems().filter(function (it) { return filter.lang === "all" || it.lang === filter.lang; });
+    var topics = data.topics.filter(function (tp) { return filter.lang === "all" || tp.lang === filter.lang; });
+    var show = filter.category === "all" && !filter.query && filter.source === "all" && stories.length > 0;
+    box.hidden = !show;
+    if (!show) return;
+    UI.clear(box);
+    box.appendChild(el("h2", "trending-title", t("trendingTitle")));
+    if (topics.length) {
+      var row = el("div", "chips topic-chips");
+      row.setAttribute("aria-label", t("trendingTopics"));
+      topics.forEach(function (tp) {
+        var chip = el("button", "chip topic", "#" + tp.text);
+        chip.type = "button";
+        chip.addEventListener("click", function () {
+          $("news-search").value = tp.text;
+          setFilter({ query: tp.text });
+        });
+        row.appendChild(chip);
+      });
+      box.appendChild(row);
+    }
+    var strip = el("ul", "trending-strip");
+    stories.slice(0, TRENDING_SHOWN).forEach(function (item, i) {
+      var li = el("li", "trend-card");
+      var a = el("a", "trend-link");
+      a.href = item.link;
+      a.target = "_blank";
+      a.rel = "noopener";
+      if (item.image) {
+        var img = el("img", "trend-image");
+        img.src = item.image;
+        img.alt = "";
+        img.loading = "lazy";
+        img.referrerPolicy = "no-referrer";
+        img.addEventListener("error", function () { img.remove(); });
+        a.appendChild(img);
+      }
+      a.appendChild(el("span", "trend-rank", UI.num(i + 1)));
+      a.appendChild(el("span", "trend-headline", item.title));
+      a.appendChild(el("span", "news-meta", sourceName(item.source) + (item.published ? " · " + ago(item.published) : "")));
+      li.appendChild(a);
+      strip.appendChild(li);
     });
+    box.appendChild(strip);
   }
 
   function renderList() {
@@ -329,7 +417,8 @@
     var ul = $("news-list");
     UI.clear(ul);
     if (!list.length) {
-      var empty = filter.category === "saved" ? t("newsNoneSaved") : (loading ? t("newsLoading") : t("newsNone"));
+      var empty = filter.category === "saved" ? t("newsNoneSaved")
+        : filter.category === "trending" ? t("newsNoneTrending") : (loading ? t("newsLoading") : t("newsNone"));
       ul.appendChild(el("li", "news-empty muted", empty));
     }
     list.slice(0, shown).forEach(function (item) { ul.appendChild(storyCard(item, false)); });
@@ -340,8 +429,9 @@
 
   function renderHome() {
     var box = $("home-news");
-    var mine = data.items.filter(function (it) { return it.lang === UI.state.lang; });
-    var list = (mine.length >= HOME_COUNT ? mine : data.items).slice(0, HOME_COUNT);
+    var ordered = News.filterNews(data.items, { priority: { ids: priorityIds(), now: Date.now() } });
+    var mine = ordered.filter(function (it) { return it.lang === UI.state.lang; });
+    var list = (mine.length >= HOME_COUNT ? mine : ordered).slice(0, HOME_COUNT);
     box.hidden = !list.length;
     if (!list.length) return;
     $("home-news-title").textContent = t("homeNews");
@@ -354,6 +444,7 @@
   function renderAll() {
     renderFilters();
     renderMeta();
+    renderTrending();
     renderList();
     renderHome();
   }
@@ -363,6 +454,7 @@
     shown = PAGE;
     writeJson(FILTER_KEY, { lang: filter.lang });
     renderFilters();
+    renderTrending();
     renderList();
   }
 

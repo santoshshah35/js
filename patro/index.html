@@ -33,6 +33,7 @@
     </div>
   </header>
 
+  <div class="alert-strip" id="alert-strip" role="alert" hidden></div>
   <button type="button" class="event-strip" id="event-strip" hidden></button>
   <div class="feed-slot feed-top" data-feed-slot="top" hidden></div>
 
@@ -90,6 +91,7 @@
           <button type="button" id="news-lang-en" aria-pressed="false" lang="en"></button>
         </div>
         <div class="chips" id="news-cats" role="group" aria-label="Category"></div>
+        <section class="news-trending" id="news-trending" hidden></section>
         <div class="news-tools">
           <select id="news-source" aria-label="Source"></select>
           <input type="search" id="news-search" autocomplete="off">
@@ -249,8 +251,23 @@
           <button type="button" role="radio" id="lang-en" lang="en">English</button>
         </div>
       </div>
+      <div class="setting">
+        <p class="setting-label" id="notify-label"></p>
+        <div class="segmented" role="radiogroup" aria-labelledby="notify-label">
+          <button type="button" role="radio" id="notify-on"></button>
+          <button type="button" role="radio" id="notify-off"></button>
+        </div>
+        <p class="fineprint" id="notify-note"></p>
+      </div>
       <p class="fineprint" id="about-text"></p>
       <button type="button" class="btn sheet-close" id="sheet-close"></button>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop" id="profile-sheet" hidden>
+    <div class="sheet profile-sheet" role="dialog" aria-modal="true" aria-labelledby="profile-title">
+      <h2 id="profile-title"></h2>
+      <form class="profile-form" id="profile-form" novalidate></form>
     </div>
   </div>
 
@@ -281,9 +298,14 @@
   <script src="lib/custom-events.js"></script>
   <script src="lib/auth.js"></script>
   <script src="lib/news.js"></script>
+  <script src="lib/trending.js"></script>
+  <script src="lib/alerts.js"></script>
+  <script src="lib/profile.js"></script>
   <script src="ui/core.js"></script>
   <script src="ui/remote.js"></script>
   <script src="ui/account.js"></script>
+  <script src="ui/profile.js"></script>
+  <script src="ui/alerts.js"></script>
   <script src="ui/calendar.js"></script>
   <script src="ui/upcoming.js"></script>
   <script src="ui/rashifal.js"></script>

@@ -194,24 +194,33 @@
       box.appendChild(btn);
       return;
     }
+    // The user's own profile (ui/profile.js) overrides the provider's name and picture.
+    var mine = UI.profile ? UI.profile.get() : {};
     var row = el("div", "account-row");
-    if (user.picture) {
+    var picture = mine.photo || user.picture;
+    if (picture) {
       var img = el("img", "account-picture");
-      img.src = user.picture;
+      img.src = picture;
       img.alt = "";
       img.referrerPolicy = "no-referrer";
       img.addEventListener("error", function () { img.hidden = true; });
       row.appendChild(img);
     }
     var who = el("div", "account-who");
-    who.appendChild(el("span", "account-name", user.name));
-    who.appendChild(el("span", "muted", user.email || PROVIDER_NAMES[user.provider]));
+    who.appendChild(el("span", "account-name", mine.name || user.name));
+    who.appendChild(el("span", "muted", mine.email || user.email || PROVIDER_NAMES[user.provider]));
     row.appendChild(who);
     var out = el("button", "btn", t("signOut"));
     out.type = "button";
     out.addEventListener("click", signOut);
     row.appendChild(out);
     box.appendChild(row);
+    if (UI.profile) {
+      var edit = el("button", "btn account-profile", t("profileEdit"));
+      edit.type = "button";
+      edit.addEventListener("click", UI.profile.open);
+      box.appendChild(edit);
+    }
   }
 
   /**
@@ -243,6 +252,7 @@
     });
     UI.on("lang", function () { renderAccount(); renderLoginSheet(null); });
     UI.on("user", renderAccount);
+    UI.on("profile", renderAccount);
     renderAccount();
     // A web sign-in that came back through auth.html in another tab.
     root.addEventListener("storage", function (e) {

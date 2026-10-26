@@ -16,15 +16,24 @@ Patro. Not affiliated with Hamro Patro.
   from Nepal Oil Corporation (loaded by the Android app; see below)
 - BS ↔ AD date converter
 - Fixed-date national days (New Year, Republic Day, Constitution Day, ...)
-- News from about 28 Nepali and English news sites, collected from their
-  RSS feeds every 30 minutes: language, category and source filters,
-  search, save and share; the latest headlines on the calendar page
+- News from 30 Nepali and English news sites, collected from their RSS
+  feeds every 30 minutes, with Nepal Post Daily and Yatra Daily as priority
+  sources: a trending section (stories several sites are covering, with hot
+  topics), language, category and source filters, search, save and share;
+  the latest headlines on the calendar page
+- Breaking-news notifications sent by the admin: the Android app checks
+  every 15 minutes in the background and shows a phone notification; a red
+  strip shows in the app for 24 hours
+- My profile for signed-in users: photo, name, mobile, email, date of birth
+  (shown on the calendar every year), gender and address, kept on the phone
 - Sign in with Google or Facebook; notes on calendar days, saved news and
   weekly/monthly rashifal can be reserved for signed-in users
 - My notes: your own notes on a day, once or every year
-- Admin panel (`admin/`): ads and notices, events, public holidays and sait,
-  fuel prices, news sources and login settings, edited with forms and saved
-  to GitHub (see `content/README.md`)
+- Web admin panel (`admin/`, not part of the app): push notifications, ads
+  and notices, events, public holidays and sait, fuel prices, news sources
+  and login settings, edited with forms and saved to GitHub (see
+  `content/README.md`). Readers can't close ads; they stay until the admin
+  changes them.
 - Bottom menu: Calendar, News, Rashifal, Dates, Exchange, Fuel, More; swipe
   left or right to move between them
 - Android home-screen widget: today's date, tithi and the next festival
@@ -152,8 +161,12 @@ requests too.
   only unlocks features on the device; `content/config.json` says which.
 - `admin/`: a static page that edits `content/*.json` through the GitHub
   API with a fine-grained token, checking each file with the app's own
-  parsers before committing. Open it from More → Admin panel in the app,
-  or at `https://santoshshah35.github.io/js/admin/` once GitHub Pages is on.
+  parsers before committing. It is a web page only: open it at
+  `https://santoshshah35.github.io/js/admin/` once GitHub Pages is on, or
+  `https://raw.githack.com/santoshshah35/js/claude/new-session-94tzzd/patro/admin/index.html`.
+- `lib/trending.js`: stories at least three sites cover within 18 hours,
+  one per topic. `lib/alerts.js` + `android/.../AlertJob.java`: the
+  admin's notifications, checked by a JobService every 15 minutes.
 
 ## Not included yet
 

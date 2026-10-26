@@ -65,10 +65,18 @@
   <div class="toast" id="toast" role="status" hidden></div>
 
   <template id="help-template">
+    <h3>Where the panel lives</h3>
+    <p>The admin panel is a web page, not part of the app. Open it from any browser (phone or computer):</p>
+    <ul>
+      <li><code>https://santoshshah35.github.io/js/admin/</code> once GitHub Pages is on (see below), or</li>
+      <li><code>https://raw.githack.com/santoshshah35/js/claude/new-session-94tzzd/patro/admin/index.html</code> straight away.</li>
+    </ul>
     <h3>How it works</h3>
     <p>Each section edits one file in <code>patro/content/</code> on GitHub. <b>Save & publish</b> makes a commit, so the repository's history shows who changed what, and any change can be undone there. The app checks every file before using it, and keeps its last good copy if something is wrong.</p>
     <h3>Ads</h3>
-    <p>Choose where the banner shows, add a title and picture, and set the dates. A banner shows from its start date to its end date (both included). A closed banner stays closed on that phone, so give a new campaign a new ID.</p>
+    <p>Choose where the banner shows, add a title and picture, and set the dates. Readers can't close or hide ads: a banner shows from its start date to its end date (both included), or for good if no end date is set, until you change or delete it here.</p>
+    <h3>Push notifications</h3>
+    <p>Write a headline (or pick a trending story) and send. The Android app checks every 15 minutes in the background, so a notification can take up to about 15–20 minutes to arrive, even when Patro is closed. In a browser, it shows while Patro is open. Everyone also sees a red strip in the app for 24 hours.</p>
     <h3>Login and members-only features</h3>
     <ul>
       <li><b>Android app, Google:</b> works without any setup. It uses the Google accounts already on the phone.</li>
@@ -88,6 +96,7 @@
   <script src="../lib/config.js"></script>
   <script src="../lib/custom-events.js"></script>
   <script src="../lib/news.js"></script>
+  <script src="../lib/alerts.js"></script>
   <script src="github.js"></script>
   <script src="editors.js"></script>
   <script src="admin.js"></script>

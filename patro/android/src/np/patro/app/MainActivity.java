@@ -15,6 +15,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
+import android.content.pm.PackageManager;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -51,6 +53,9 @@ public class MainActivity extends Activity {
     private static final String FEED_PATH = "/santoshshah35/js/";
     private static final int MAX_BYTES = 2 * 1024 * 1024;
     private static final int REQUEST_GOOGLE_ACCOUNT = 1;
+    private static final int REQUEST_PHOTO = 2;
+    private static final int REQUEST_NOTIFICATIONS = 3;
+    private static final String POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS";
     // Facebook's sign-in page; it returns through auth.html and patro://auth.
     private static final String FACEBOOK_AUTH = "https://www.facebook.com/";
     private static final String PREFS = "patro.auth";
@@ -61,6 +66,8 @@ public class MainActivity extends Activity {
     private static volatile String userAgent = "Mozilla/5.0 (Linux; Android) Patro/1.3";
     private final Handler main = new Handler(Looper.getMainLooper());
     private WebView web;
+    // The profile photo picker's answer goes back to the page through this.
+    private ValueCallback<Uri[]> photoCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +84,8 @@ public class MainActivity extends Activity {
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(false);
-        settings.setAllowContentAccess(false);
+        // The profile photo picker returns content:// addresses the page reads.
+        settings.setAllowContentAccess(true);
 
         web.addJavascriptInterface(new Bridge(), "PatroNative");
         web.setWebViewClient(new WebViewClient() {
@@ -94,6 +102,37 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
+
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback,
+                                             FileChooserParams params) {
+                if (photoCallback != null) photoCallback.onReceiveValue(null);
+                photoCallback = callback;
+                Intent pick = new Intent(Intent.ACTION_GET_CONTENT);
+                pick.addCategory(Intent.CATEGORY_OPENABLE);
+                pick.setType("image/*");
+                try {
+                    startActivityForResult(Intent.createChooser(pick, null), REQUEST_PHOTO);
+                    return true;
+                } catch (ActivityNotFoundException e) {
+                    photoCallback = null;
+                    return false;
+                }
+            }
+        });
+
+        // Breaking news from the admin: checked now and every 15 minutes.
+        AlertJob.schedule(this);
+        pool.execute(new Runnable() {
+            @Override
+            public void run() {
+                AlertJob.check(getApplicationContext());
+            }
+        });
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] {POST_NOTIFICATIONS}, REQUEST_NOTIFICATIONS);
+        }
 
         if (savedInstanceState != null) web.restoreState(savedInstanceState);
         else web.loadUrl(START_URL);
@@ -142,6 +181,13 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_PHOTO) {
+            if (photoCallback != null) {
+                photoCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
+                photoCallback = null;
+            }
+            return;
+        }
         if (requestCode != REQUEST_GOOGLE_ACCOUNT) return;
         String email = data == null ? null : data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
         if (resultCode != RESULT_OK || email == null) {
@@ -266,6 +312,15 @@ public class MainActivity extends Activity {
                     }
                 }
             });
+        }
+
+        /** ui/alerts.js: notifications on or off, and their language. */
+        @JavascriptInterface
+        public void setNotifications(boolean enabled, String lang) {
+            getSharedPreferences(AlertJob.PREFS, MODE_PRIVATE).edit()
+                    .putBoolean(AlertJob.PREF_ENABLED, enabled)
+                    .putString(AlertJob.PREF_LANG, "en".equals(lang) ? "en" : "ne")
+                    .apply();
         }
 
         /** ui/news.js: the phone's share menu. */

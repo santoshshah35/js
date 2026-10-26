@@ -14,6 +14,7 @@
   var Custom = root.PatroCustomEvents;
   var News = root.PatroNews;
   var Config = root.PatroConfig;
+  var Alerts = root.PatroAlerts;
 
   // ---- Small DOM helpers ----
 
@@ -222,7 +223,7 @@
             field("Show until (included)", input(item.end, function (v) { setOpt(item, "end", v); }, { type: "date" }))
           ]),
           field("ID", input(item.id, function (v) { item.id = slug(v) || item.id; changed(); }),
-            "A closed banner stays closed for its ID; use a new ID for a new campaign."),
+            "A short unique name for this entry (letters, numbers and -)."),
           h("div", { class: "toolbar" }, [
             h("button", { class: "btn", type: "button", text: "Move up", disabled: i === 0, onclick: function () {
               model.items.splice(i - 1, 0, model.items.splice(i, 1)[0]); open = i - 1; changed(); redraw();
@@ -437,8 +438,8 @@
     render: function (box, model, changed, ctx) {
       var open = null;
       var status = {};
-      ctx.newsStatus().then(function (list) {
-        (list || []).forEach(function (s) { status[s.id] = s; });
+      ctx.newsDoc().then(function (doc) {
+        ((doc && doc.sources) || []).forEach(function (s) { status[s.id] = s; });
         redraw();
       });
       function redraw() {
@@ -458,6 +459,7 @@
           var row = h("div", { class: "row" + (open === i ? " open" : "") }, [
             h("div", { class: "row-main", onclick: function () { open = open === i ? null : i; redraw(); } }, [
               h("span", { class: "badge", text: s.lang === "en" ? "English" : "नेपाली" }),
+              s.priority ? h("span", { class: "badge ad", text: "Priority" }) : null,
               h("span", { class: "row-title", text: s.name ? (s.name.ne || s.name.en) : "(no name)" }),
               h("span", { class: "status " + label[0], text: label[1] })
             ])
@@ -479,6 +481,13 @@
               changed();
             } }),
             " Show news from this source"
+          ]),
+          h("label", { class: "check" }, [
+            h("input", { type: "checkbox", checked: s.priority === true, onchange: function (e) {
+              if (e.target.checked) s.priority = true; else delete s.priority;
+              changed();
+            } }),
+            " Priority source: its stories from the last 12 hours are listed first"
           ]),
           pairFields("Name", s, "name", 40, changed),
           h("div", { class: "grid2" }, [
@@ -547,5 +556,106 @@
     }
   };
 
-  root.PatroEditors = { ads: ads, events: events, fuel: fuel, newsSources: newsSources, settings: settings, h: h, field: field };
+  // ---- Push notifications (alerts.json) ----
+
+  var LEVEL_NAMES = { breaking: "Breaking news", important: "Important", info: "Notice" };
+
+  var push = {
+    title: "Push notification",
+    path: "patro/content/alerts.json",
+    help: "Send breaking news or an important announcement. Android phones show it as a notification within about 15 minutes, even when Patro is closed; everyone sees it as a red strip in the app for 24 hours.",
+    empty: { alerts: [] },
+    parse: function (text) {
+      var json = JSON.parse(text);
+      if (!Array.isArray(json.alerts)) throw new Error("alerts.json has no alerts list");
+      return json;
+    },
+    validate: function (model) {
+      return Alerts.parseAlerts(model).skipped ? ["Some sent notifications are not valid; delete them."] : [];
+    },
+    serialize: pretty,
+    // Sending saves at once; there's nothing to "Save" separately.
+    autoSave: true,
+    render: function (box, model, changed, ctx) {
+      var draft = { level: "breaking" };
+      var problems = h("ul", { class: "problems" });
+      function redraw() {
+        box.replaceChildren();
+        var form = h("div", { class: "form compose" }, [
+          h("h3", { text: "New notification" }),
+          field("Type", select(Object.keys(LEVEL_NAMES).map(function (k) { return [k, LEVEL_NAMES[k]]; }), draft.level,
+            function (v) { draft.level = v; })),
+          pairFields("Headline (required)", draft, "title", 120, function () {}),
+          pairFields("More text", draft, "body", 300, function () {}, true),
+          field("Link", input(draft.link, function (v) { draft.link = v.trim() || undefined; }, { type: "url", placeholder: "https://…" }),
+            "Opened when the notification is tapped. Optional."),
+          problems,
+          h("button", { class: "btn primary big", type: "button", text: "📣 Send notification now", onclick: send })
+        ]);
+        box.appendChild(form);
+
+        var trendBox = h("div", { class: "trend-pick" }, [h("h3", { text: "Or send a trending story" }),
+          h("p", { class: "muted", text: "Loading trending news…" })]);
+        box.appendChild(trendBox);
+        ctx.newsDoc().then(function (doc) {
+          var items = {};
+          ((doc && doc.items) || []).forEach(function (it) { items[it.id] = it; });
+          var list = ((doc && doc.trending) || []).map(function (id) { return items[id]; }).filter(Boolean).slice(0, 8);
+          trendBox.replaceChildren(h("h3", { text: "Or send a trending story" }));
+          if (!list.length) trendBox.appendChild(h("p", { class: "muted", text: "Nothing is trending right now." }));
+          list.forEach(function (it) {
+            trendBox.appendChild(h("div", { class: "row" }, [h("div", { class: "row-main" }, [
+              h("span", { class: "row-title", text: it.title }),
+              h("button", { class: "btn small", type: "button", text: "Use this", onclick: function () {
+                draft.title = it.lang === "en" ? { en: it.title } : { ne: it.title };
+                draft.link = it.link;
+                redraw();
+                box.scrollIntoView({ block: "start" });
+              } })
+            ])]));
+          });
+        });
+
+        box.appendChild(h("h3", { text: "Sent" }));
+        if (!model.alerts.length) box.appendChild(h("p", { class: "muted", text: "Nothing sent yet." }));
+        model.alerts.forEach(function (a, i) {
+          var when = new Date(a.sentAt);
+          var live = Date.now() - when.getTime() < Alerts.FRESH_HOURS * 3600000;
+          box.appendChild(h("div", { class: "row" }, [h("div", { class: "row-main" }, [
+            h("span", { class: "badge " + (a.level === "breaking" ? "holiday" : ""), text: LEVEL_NAMES[a.level] || a.level }),
+            h("span", { class: "row-title", text: a.title ? (a.title.ne || a.title.en) : "" }),
+            h("span", { class: "status " + (live ? "live" : "expired"), text: (live ? "Showing · " : "") + when.toLocaleString() }),
+            h("button", { class: "btn small danger", type: "button", text: "Delete", onclick: function () {
+              if (!root.confirm("Delete this notification? Phones that already showed it keep it.")) return;
+              model.alerts.splice(i, 1);
+              changed();
+              ctx.save();
+              redraw();
+            } })
+          ])]));
+        });
+      }
+      function send() {
+        var alert = { id: "alert-" + Date.now().toString(36), level: draft.level, title: draft.title, sentAt: new Date().toISOString() };
+        if (draft.body) alert.body = draft.body;
+        if (draft.link) alert.link = draft.link;
+        var check = Alerts.parseAlerts({ alerts: [alert] });
+        var msgs = [];
+        if (!draft.title) msgs.push("Write a headline.");
+        else if (check.skipped) msgs.push("The link must start with https://.");
+        problems.replaceChildren.apply(problems, msgs.map(function (m) { return h("li", { text: m }); }));
+        if (msgs.length) return;
+        if (!root.confirm("Send this notification to every Patro user now?")) return;
+        model.alerts.unshift(alert);
+        model.alerts = model.alerts.slice(0, Alerts.MAX_ALERTS);
+        draft = { level: "breaking" };
+        changed();
+        ctx.save();
+        redraw();
+      }
+      redraw();
+    }
+  };
+
+  root.PatroEditors = { ads: ads, events: events, fuel: fuel, newsSources: newsSources, settings: settings, push: push, h: h, field: field };
 })(this);

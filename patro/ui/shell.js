@@ -99,8 +99,8 @@
     var start = null;
     document.addEventListener("touchstart", function (e) {
       start = null;
-      if (e.touches.length !== 1 || !$("more-sheet").hidden || !$("login-sheet").hidden) return;
-      if (e.target.closest("input, select, textarea, .rates-scroll, .chips, .bottom-nav")) return;
+      if (e.touches.length !== 1 || !$("more-sheet").hidden || !$("login-sheet").hidden || !$("profile-sheet").hidden) return;
+      if (e.target.closest("input, select, textarea, .rates-scroll, .chips, .trending-strip, .bottom-nav")) return;
       start = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
     }, { passive: true });
     document.addEventListener("touchend", function (e) {
@@ -180,7 +180,7 @@
   // The Android app asks this before closing on the back button: true means
   // the page used the press (to close the sign-in or settings sheet).
   root.__patroBack = function () {
-    return UI.account.closeLogin() || closeSheet();
+    return UI.profile.close() || UI.account.closeLogin() || closeSheet();
   };
 
   function renderNav() {
@@ -218,7 +218,9 @@
     UI.converter.init();
     UI.markets.init();
     UI.feed.init();
+    UI.profile.init();
     UI.account.init();
+    UI.alerts.init();
     UI.notes.init();
     UI.news.init();
     UI.widget.init();
