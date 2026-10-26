@@ -43,6 +43,9 @@
 
   var LIMITS = { title: 300, summary: 240, url: 1000, source: 40 };
   var MAX_ITEMS = 600;
+  var MAX_TRENDING = 12;
+  // Stories this new from a priority source are listed before the others.
+  var PRIORITY_HOURS = 12;
 
   // ---- Small text helpers ----
 
@@ -250,7 +253,8 @@
       var feeds = Array.isArray(r.feeds) ? r.feeds.map(httpsUrl).filter(Boolean).slice(0, 4) : [];
       if (!id || !name || !lang || !feeds.length || seen[id]) return;
       seen[id] = true;
-      sources.push({ id: id, name: name, lang: lang, feeds: feeds, site: httpsUrl(r.site), enabled: r.enabled !== false });
+      sources.push({ id: id, name: name, lang: lang, feeds: feeds, site: httpsUrl(r.site),
+        enabled: r.enabled !== false, priority: r.priority === true });
     });
     return { sources: sources, skipped: raw.length - sources.length };
   }
@@ -290,7 +294,7 @@
       var name = s && pair(s.name, LIMITS.source);
       if (!name || typeof s.id !== "string" || ids[s.id] || LANGS.indexOf(s.lang) < 0) return;
       ids[s.id] = true;
-      sources.push({ id: s.id, name: name, lang: s.lang, site: httpsUrl(s.site) });
+      sources.push({ id: s.id, name: name, lang: s.lang, site: httpsUrl(s.site), priority: s.priority === true });
     });
     var seen = {};
     var items = [];
@@ -302,23 +306,39 @@
       }
     });
     var at = Date.parse(json.updatedAt);
-    return { updatedAt: isNaN(at) ? null : at, sources: sources, items: items };
+    var known = {};
+    items.forEach(function (it) { known[it.id] = true; });
+    var trending = Array.isArray(json.trending)
+      ? json.trending.filter(function (id) { return known[id]; }).slice(0, MAX_TRENDING) : [];
+    var topics = Array.isArray(json.topics) ? json.topics.filter(function (t) {
+      return t && typeof t.text === "string" && t.text.length <= 40 && LANGS.indexOf(t.lang) >= 0;
+    }).slice(0, MAX_TRENDING).map(function (t) { return { text: t.text, lang: t.lang }; }) : [];
+    return { updatedAt: isNaN(at) ? null : at, sources: sources, items: items, trending: trending, topics: topics };
   }
 
   /**
-   * Stories matching the reader's choices, newest first.
+   * Stories matching the reader's choices, newest first. With
+   * f.priority = {ids: [source ids], now}, recent stories from those
+   * sources come first.
    * @param {object[]} items from parseNews
-   * @param {{lang?:string, source?:string, category?:string, query?:string, only?:string[]}} f
+   * @param {{lang?:string, source?:string, category?:string, query?:string, only?:string[],
+   *   priority?:{ids:string[], now:number}}} f
    */
   function filterNews(items, f) {
     var q = (f.query || "").trim().toLowerCase();
+    var since = f.priority ? f.priority.now - PRIORITY_HOURS * 3600000 : Infinity;
+    function boosted(it) {
+      return f.priority && f.priority.ids.indexOf(it.source) >= 0 && (it.published || 0) >= since ? 1 : 0;
+    }
     return items.filter(function (it) {
       return (!f.lang || f.lang === "all" || it.lang === f.lang)
         && (!f.source || f.source === "all" || it.source === f.source)
         && (!f.category || f.category === "all" || it.category === f.category)
         && (!f.only || f.only.indexOf(it.id) >= 0)
         && (!q || it.title.toLowerCase().indexOf(q) >= 0 || it.summary.toLowerCase().indexOf(q) >= 0);
-    }).sort(function (a, b) { return (b.published || 0) - (a.published || 0); });
+    }).sort(function (a, b) {
+      return (boosted(b) - boosted(a)) || ((b.published || 0) - (a.published || 0));
+    });
   }
 
   /**

@@ -1,5 +1,7 @@
 {
   "sources": [
+    {"id": "nepalpostdaily", "name": {"ne": "नेपाल पोस्ट डेली", "en": "Nepal Post Daily"}, "lang": "ne", "site": "https://nepalpostdaily.com", "priority": true, "feeds": ["https://nepalpostdaily.com/feed", "https://nepalpostdaily.com/rss", "https://www.nepalpostdaily.com/feed", "https://news.google.com/rss/search?q=when%3A2d+site%3Anepalpostdaily.com&hl=ne&gl=NP&ceid=NP:ne"]},
+    {"id": "yatradaily", "name": {"ne": "यात्रा डेली", "en": "Yatra Daily"}, "lang": "ne", "site": "https://yatradaily.com", "priority": true, "feeds": ["https://yatradaily.com/feed", "https://yatradaily.com/rss", "https://www.yatradaily.com/feed", "https://news.google.com/rss/search?q=when%3A2d+site%3Ayatradaily.com&hl=ne&gl=NP&ceid=NP:ne"]},
     {"id": "onlinekhabar", "name": {"ne": "अनलाइनखबर", "en": "Onlinekhabar"}, "lang": "ne", "site": "https://www.onlinekhabar.com", "feeds": ["https://www.onlinekhabar.com/feed"]},
     {"id": "ekantipur", "name": {"ne": "कान्तिपुर", "en": "Kantipur"}, "lang": "ne", "site": "https://ekantipur.com", "feeds": ["https://ekantipur.com/rss", "https://ekantipur.com/feed", "https://news.google.com/rss/search?q=when%3A2d+site%3Aekantipur.com&hl=ne&gl=NP&ceid=NP:ne"]},
     {"id": "setopati", "name": {"ne": "सेतोपाटी", "en": "Setopati"}, "lang": "ne", "site": "https://www.setopati.com", "feeds": ["https://www.setopati.com/feed", "https://www.setopati.com/rss"]},

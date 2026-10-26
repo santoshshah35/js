@@ -366,7 +366,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, .day:focus-visi
 }
 .feed-card.feed-notice { border-left: 4px solid var(--blue); }
 .feed-image { width: 112px; max-width: 32%; object-fit: cover; flex: 0 0 auto; background: var(--surface-2); }
-.feed-body { display: flex; flex-direction: column; gap: 4px; padding: 14px 40px 14px 0; min-width: 0; }
+.feed-body { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px 14px 0; min-width: 0; }
 .feed-notice .feed-body, .feed-card.no-image .feed-body { padding-left: 16px; }
 .feed-label {
   align-self: flex-start; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
@@ -375,16 +375,9 @@ button:focus-visible, select:focus-visible, input:focus-visible, .day:focus-visi
 .feed-title { margin: 2px 0 0; font-size: 1rem; line-height: 1.35; }
 .feed-text { margin: 0; color: var(--muted); font-size: 0.9rem; }
 .feed-link { align-self: flex-start; margin-top: 4px; color: var(--accent); font-weight: 600; }
-.feed-close {
-  position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 50%;
-  border: 0; background: transparent; color: var(--muted); font-size: 1.3rem; line-height: 1; cursor: pointer;
-}
-.feed-close:hover { background: var(--surface-2); color: var(--text); }
 .feed-card.feed-wide { flex-direction: column; gap: 0; }
 .feed-wide .feed-image { width: 100%; max-width: 100%; height: auto; object-fit: contain; }
 .feed-wide .feed-body { padding: 12px 16px 14px; }
-/* Keep the close button off the banner, where it would hide the sponsor's logo. */
-.feed-wide .feed-close { top: auto; bottom: 8px; }
 
 /* Tab change by swipe */
 @media (prefers-reduced-motion: no-preference) {
@@ -532,7 +525,6 @@ button:focus-visible, select:focus-visible, input:focus-visible, .day:focus-visi
 .login-facebook { background: #1877f2; border-color: #1877f2; color: #fff; }
 .login-facebook:hover { filter: brightness(1.05); border-color: #1877f2; }
 .login-status { margin: 0; min-height: 1.2em; font-size: 0.9rem; color: var(--holiday); }
-.admin-link { align-self: flex-start; font-size: 0.85rem; margin-top: 4px; }
 
 /* News */
 .news-head-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }

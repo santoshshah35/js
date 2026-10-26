@@ -13,6 +13,7 @@
 const fs = require("fs");
 const path = require("path");
 const News = require("../lib/news.js");
+const Trending = require("../lib/trending.js");
 
 const SOURCES = path.join(__dirname, "..", "content", "news-sources.json");
 const UA = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36";
@@ -82,7 +83,7 @@ async function main() {
     const ok = got.length > 0;
     if (!ok && previous) got = previous.items.filter((it) => it.source === source.id);
     console.log(`${ok ? "OK  " : "FAIL"} ${source.id}: ${r.notes.join(" | ")}${!ok && got.length ? ` (kept ${got.length} earlier)` : ""}`);
-    summary.push({ id: source.id, name: source.name, lang: source.lang, site: source.site, ok, count: got.length });
+    summary.push({ id: source.id, name: source.name, lang: source.lang, site: source.site, priority: source.priority, ok, count: got.length });
     items = items.concat(got);
   });
 
@@ -97,7 +98,9 @@ async function main() {
   items.sort((a, b) => b.published - a.published);
   items = items.slice(0, News.MAX_ITEMS);
 
-  const doc = { version: 1, updatedAt: new Date(now).toISOString(), sources: summary, items };
+  const hot = Trending.trending(items, now);
+  console.log(`Trending: ${hot.topics.map((t) => t.text).join(" | ") || "nothing yet"}`);
+  const doc = { version: 1, updatedAt: new Date(now).toISOString(), sources: summary, items, trending: hot.ids, topics: hot.topics };
   // Checked with the app's own reader before publishing.
   const check = News.parseNews(JSON.stringify(doc));
   fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });

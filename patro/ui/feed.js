@@ -1,7 +1,7 @@
 /*
  * Admin notices and ads (lib/feed.js) shown in the page's feed slots.
- * The last good feed is kept so banners show offline; a closed banner stays
- * closed on this device.
+ * The last good feed is kept so banners show offline. Readers can't close
+ * or hide a banner: it stays until the admin changes or ends it.
  */
 (function (root) {
   "use strict";
@@ -14,17 +14,17 @@
   var el = UI.el;
 
   var CACHE_KEY = "patro.feed";
-  var DISMISSED_KEY = "patro.feed.dismissed";
+  // Banners closed in versions before 1.8; cleared so they show again.
+  var OLD_DISMISSED_KEY = "patro.feed.dismissed";
   var REFRESH_MS = 30 * 60 * 1000;
-  var MAX_DISMISSED = 100;
   var WIDE_RATIO = 2;
 
   var items = [];
   var lastAttempt = 0;
 
   UI.addText({
-    ne: { feedAd: "विज्ञापन", feedNotice: "सूचना", feedMore: "थप जान्नुहोस्", feedClose: "बन्द गर्नुहोस्" },
-    en: { feedAd: "Sponsored", feedNotice: "Notice", feedMore: "Learn more", feedClose: "Close" }
+    ne: { feedAd: "विज्ञापन", feedNotice: "सूचना", feedMore: "थप जान्नुहोस्" },
+    en: { feedAd: "Sponsored", feedNotice: "Notice", feedMore: "Learn more" }
   });
 
   function readJson(key) {
@@ -38,18 +38,6 @@
 
   function writeJson(key, value) {
     try { root.localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* not saved */ }
-  }
-
-  function dismissed() {
-    var list = readJson(DISMISSED_KEY);
-    return Array.isArray(list) ? list : [];
-  }
-
-  function dismiss(id) {
-    var list = dismissed().filter(function (x) { return x !== id; });
-    list.push(id);
-    writeJson(DISMISSED_KEY, list.slice(-MAX_DISMISSED));
-    render();
   }
 
   function card(item) {
@@ -81,20 +69,14 @@
       body.appendChild(a);
     }
     box.appendChild(body);
-    var close = el("button", "feed-close", "×");
-    close.type = "button";
-    close.setAttribute("aria-label", t("feedClose") + ": " + UI.pick(item.title));
-    close.addEventListener("click", function () { dismiss(item.id); });
-    box.appendChild(close);
     return box;
   }
 
   function render() {
     var today = BS.nepalToday();
-    var hidden = dismissed();
     Array.prototype.forEach.call(document.querySelectorAll("[data-feed-slot]"), function (slot) {
       UI.clear(slot);
-      var shown = Feed.activeItems(items, slot.getAttribute("data-feed-slot"), today, hidden);
+      var shown = Feed.activeItems(items, slot.getAttribute("data-feed-slot"), today);
       shown.forEach(function (item) { slot.appendChild(card(item)); });
       slot.hidden = !shown.length;
     });
@@ -122,6 +104,7 @@
   }
 
   function init() {
+    try { root.localStorage.removeItem(OLD_DISMISSED_KEY); } catch (e) { /* nothing stored */ }
     var cached = readJson(CACHE_KEY);
     if (cached && cached.body) {
       try { useFeed(cached.body); } catch (e) { /* a broken saved copy is ignored */ }

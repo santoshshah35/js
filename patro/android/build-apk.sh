@@ -23,13 +23,12 @@ done
 [ -f "$ANDROID_JAR" ] || { echo "android.jar not found at $ANDROID_JAR" >&2; exit 1; }
 
 rm -rf "$OUT"
-mkdir -p "$OUT/assets/www/lib" "$OUT/assets/www/ui" "$OUT/assets/www/admin" "$OUT/gen/np/patro/app" "$OUT/classes"
+mkdir -p "$OUT/assets/www/lib" "$OUT/assets/www/ui" "$OUT/gen/np/patro/app" "$OUT/classes"
 
 echo "Copying the web app"
 cp "$WEB/index.html" "$WEB/styles.css" "$OUT/assets/www/"
 cp "$WEB"/lib/*.js "$OUT/assets/www/lib/"
 cp "$WEB"/ui/*.js "$OUT/assets/www/ui/"
-cp "$WEB"/admin/*.html "$WEB"/admin/*.js "$WEB"/admin/*.css "$OUT/assets/www/admin/"
 
 # The news sites the app may read itself when the published news file is
 # old (ui/news.js), from content/news-sources.json.

@@ -34,7 +34,6 @@
       language: "भाषा",
       close: "बन्द गर्नुहोस्",
       langButton: "English",
-      adminPanel: "एडमिन प्यानल (व्यवस्थापकका लागि)",
       about: "Patro: नेपाली पात्रो। तिथि, चाडपर्व र राशिफल यही उपकरणमा गणना हुन्छन्; विनिमय दर नेपाल राष्ट्र बैंक, सुनचाँदी महासंघ र नेपाल आयल निगमबाट आउँछन्।"
     },
     en: {
@@ -52,7 +51,6 @@
       language: "Language",
       close: "Close",
       langButton: "नेपाली",
-      adminPanel: "Admin panel (for the app's managers)",
       about: "Patro: a Nepali calendar. Tithi, festivals and rashifal are computed on this device; rates come from Nepal Rastra Bank, FENEGOSIDA and Nepal Oil Corporation."
     }
   });
@@ -155,7 +153,6 @@
     $("lang-label").textContent = t("language");
     $("sheet-close").textContent = t("close");
     $("about-text").textContent = t("about");
-    $("admin-link").textContent = t("adminPanel");
     [["system", "themeSystem"], ["light", "themeLight"], ["dark", "themeDark"]].forEach(function (pair) {
       var b = $("theme-" + pair[0]);
       b.textContent = t(pair[1]);
