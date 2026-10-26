@@ -4,5 +4,9 @@
     "facebookAppId": "",
     "webAddress": "https://santoshshah35.github.io/js/"
   },
-  "membersOnly": ["notes", "newsSave"]
+  "membersOnly": [
+    "notes",
+    "newsSave",
+    "rashifalPeriods"
+  ]
 }
