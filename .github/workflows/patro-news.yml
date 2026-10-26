@@ -1,0 +1,56 @@
+# Collects news from the RSS feeds in patro/content/news-sources.json every
+# 30 minutes and publishes news.json on the patro-data branch, which the app
+# downloads. That branch holds a single commit that each run replaces, so the
+# frequent updates don't grow the repository's history.
+#
+# Scheduled runs happen only on the default branch (main). A push that
+# changes the fetcher or the sources list also runs it.
+name: Patro news
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - patro/tools/fetch-news.js
+      - patro/lib/news.js
+      - patro/content/news-sources.json
+      - .github/workflows/patro-news.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: patro-news
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Get the last published file
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/previous.json" \
+            "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/patro-data/news.json" \
+            || echo "No earlier news.json."
+
+      - name: Fetch news
+        run: node patro/tools/fetch-news.js "$RUNNER_TEMP/out/news.json" "$RUNNER_TEMP/previous.json"
+
+      - name: Publish to the patro-data branch
+        run: |
+          cd "$RUNNER_TEMP/out"
+          git init -q -b patro-data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add news.json
+          git commit -q -m "Patro news $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:patro-data
