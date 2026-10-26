@@ -69,8 +69,13 @@ public class AlertJob extends JobService {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                check(getApplicationContext());
-                jobFinished(params, false);
+                try {
+                    check(getApplicationContext());
+                } catch (Throwable e) {
+                    // Try again at the next check.
+                } finally {
+                    jobFinished(params, false);
+                }
             }
         }).start();
         return true;

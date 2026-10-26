@@ -25,6 +25,8 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
@@ -60,6 +62,10 @@ public class MainActivity extends Activity {
     private static final String FACEBOOK_AUTH = "https://www.facebook.com/";
     private static final String PREFS = "patro.auth";
     private static final String PREF_NONCE = "nonce";
+    // The last crash, saved so the next launch can show it and start safely.
+    private static final String CRASH_PREFS = "patro.crash";
+    private static final String PREF_CRASH = "last";
+    private static boolean crashHandlerSet = false;
 
     private final ExecutorService pool = Executors.newFixedThreadPool(2);
     // Sent with rate requests so the sites treat them like the phone's browser.
@@ -72,6 +78,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        catchCrashes();
+        boolean crashedLastTime = getSharedPreferences(CRASH_PREFS, MODE_PRIVATE).getString(PREF_CRASH, null) != null;
         web = new WebView(this);
         setContentView(web);
 
@@ -122,22 +130,74 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Breaking news from the admin: checked now and every 15 minutes.
-        AlertJob.schedule(this);
-        pool.execute(new Runnable() {
-            @Override
-            public void run() {
-                AlertJob.check(getApplicationContext());
-            }
-        });
-        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[] {POST_NOTIFICATIONS}, REQUEST_NOTIFICATIONS);
-        }
+        // After a crash, start without the extras so the page can open and
+        // show what went wrong.
+        if (!crashedLastTime) startAlerts();
 
         if (savedInstanceState != null) web.restoreState(savedInstanceState);
         else web.loadUrl(START_URL);
         // Opened by the patro://auth link after Facebook sign-in.
         if (savedInstanceState == null) handleAuthLink(getIntent(), true);
+    }
+
+    /** Breaking news from the admin: checked now and every 15 minutes. */
+    private void startAlerts() {
+        try {
+            AlertJob.schedule(this);
+        } catch (Throwable e) {
+            // Background checks unavailable on this phone; alerts still show in the app.
+        }
+        pool.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    AlertJob.check(getApplicationContext());
+                } catch (Throwable e) {
+                    // Nothing to show this time.
+                }
+            }
+        });
+        try {
+            if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[] {POST_NOTIFICATIONS}, REQUEST_NOTIFICATIONS);
+            }
+        } catch (Throwable e) {
+            // The phone's own settings can still turn notifications on.
+        }
+    }
+
+    /** Saves any crash's details for the next launch, then lets Android close the app. */
+    private void catchCrashes() {
+        if (crashHandlerSet) return;
+        crashHandlerSet = true;
+        final Thread.UncaughtExceptionHandler previous = Thread.getDefaultUncaughtExceptionHandler();
+        final android.content.Context app = getApplicationContext();
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread thread, Throwable error) {
+                try {
+                    StringWriter trace = new StringWriter();
+                    error.printStackTrace(new PrintWriter(trace));
+                    String report = "Patro " + versionName() + ", Android " + Build.VERSION.RELEASE
+                            + " (" + Build.VERSION.SDK_INT + "), " + Build.MANUFACTURER + " " + Build.MODEL
+                            + "\n" + trace.toString();
+                    app.getSharedPreferences(CRASH_PREFS, MODE_PRIVATE).edit()
+                            .putString(PREF_CRASH, report.length() > 6000 ? report.substring(0, 6000) : report)
+                            .commit();
+                } catch (Throwable ignored) {
+                    // Nothing more can be done here.
+                }
+                if (previous != null) previous.uncaughtException(thread, error);
+            }
+        });
+    }
+
+    private String versionName() {
+        try {
+            return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+        } catch (Exception e) {
+            return "?";
+        }
     }
 
     @Override
@@ -321,6 +381,15 @@ public class MainActivity extends Activity {
                     .putBoolean(AlertJob.PREF_ENABLED, enabled)
                     .putString(AlertJob.PREF_LANG, "en".equals(lang) ? "en" : "ne")
                     .apply();
+        }
+
+        /** ui/shell.js: the last crash's details (once), or null. */
+        @JavascriptInterface
+        public String takeCrashReport() {
+            SharedPreferences prefs = getSharedPreferences(CRASH_PREFS, MODE_PRIVATE);
+            String report = prefs.getString(PREF_CRASH, null);
+            prefs.edit().remove(PREF_CRASH).apply();
+            return report;
         }
 
         /** ui/news.js: the phone's share menu. */

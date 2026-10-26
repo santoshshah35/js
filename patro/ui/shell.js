@@ -34,6 +34,9 @@
       language: "भाषा",
       close: "बन्द गर्नुहोस्",
       langButton: "English",
+      crashTitle: "Patro पछिल्लो पटक अचानक बन्द भयो",
+      crashHelp: "यो त्रुटि विकासकर्तालाई पठाउनुहोस्, ताकि यसलाई सच्याउन सकियोस्।",
+      crashSend: "त्रुटि पठाउनुहोस्",
       about: "Patro: नेपाली पात्रो। तिथि, चाडपर्व र राशिफल यही उपकरणमा गणना हुन्छन्; विनिमय दर नेपाल राष्ट्र बैंक, सुनचाँदी महासंघ र नेपाल आयल निगमबाट आउँछन्।"
     },
     en: {
@@ -51,6 +54,9 @@
       language: "Language",
       close: "Close",
       langButton: "नेपाली",
+      crashTitle: "Patro closed unexpectedly last time",
+      crashHelp: "Please send this error to the developer so it can be fixed.",
+      crashSend: "Send error",
       about: "Patro: a Nepali calendar. Tithi, festivals and rashifal are computed on this device; rates come from Nepal Rastra Bank, FENEGOSIDA and Nepal Oil Corporation."
     }
   });
@@ -191,6 +197,37 @@
     $("lang-toggle").textContent = t("langButton");
   }
 
+  // ---- Crash report ----
+
+  // If the Android app closed unexpectedly last time, show the error once so
+  // it can be sent to the developer.
+  function showCrashReport() {
+    var bridge = root.PatroNative;
+    if (!bridge || typeof bridge.takeCrashReport !== "function") return;
+    var report = null;
+    try { report = bridge.takeCrashReport(); } catch (e) { report = null; }
+    if (!report) return;
+    var box = UI.el("section", "crash-report");
+    box.setAttribute("role", "alert");
+    box.appendChild(UI.el("h2", null, t("crashTitle")));
+    box.appendChild(UI.el("p", null, t("crashHelp")));
+    box.appendChild(UI.el("pre", null, report));
+    var share = UI.el("button", "btn btn-primary", t("crashSend"));
+    share.type = "button";
+    share.addEventListener("click", function () {
+      if (typeof bridge.share === "function") bridge.share(report);
+    });
+    var close = UI.el("button", "btn", t("close"));
+    close.type = "button";
+    close.addEventListener("click", function () { box.remove(); });
+    var buttons = UI.el("div", "crash-buttons");
+    buttons.appendChild(share);
+    buttons.appendChild(close);
+    box.appendChild(buttons);
+    var header = document.querySelector(".topbar");
+    header.parentNode.insertBefore(box, header.nextSibling);
+  }
+
   // ---- Start-up ----
 
   function tickClock() {
@@ -208,6 +245,7 @@
   }
 
   function init() {
+    showCrashReport();
     document.documentElement.lang = UI.state.lang;
     applyTheme(UI.state.theme);
     // Saved admin settings and events first, so the first drawing uses them.

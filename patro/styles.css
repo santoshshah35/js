@@ -652,3 +652,10 @@ button:focus-visible, select:focus-visible, input:focus-visible, .day:focus-visi
 .pf-hint { font-size: 0.82rem; color: var(--muted); }
 .pf-error { margin: 0; font-size: 0.85rem; color: var(--holiday); }
 .pf-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Crash report (Android, after an unexpected close) */
+.crash-report { margin: 12px 16px; padding: 14px; border: 2px solid var(--holiday); border-radius: var(--radius); background: var(--surface); }
+.crash-report h2 { margin: 0 0 6px; font-size: 1.05rem; color: var(--holiday); }
+.crash-report p { margin: 0 0 8px; }
+.crash-report pre { max-height: 180px; overflow: auto; font-size: 0.72rem; background: var(--surface-2); padding: 8px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; }
+.crash-buttons { display: flex; gap: 8px; margin-top: 10px; }
