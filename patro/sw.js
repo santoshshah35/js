@@ -6,12 +6,14 @@
  */
 "use strict";
 
-var VERSION = "patro-v7";
+var VERSION = "patro-v8";
 var FILES = [
   "./",
   "index.html",
   "styles.css",
   "ui/core.js",
+  "ui/remote.js",
+  "ui/account.js",
   "ui/calendar.js",
   "ui/upcoming.js",
   "ui/rashifal.js",
@@ -19,6 +21,8 @@ var FILES = [
   "ui/markets.js",
   "ui/feed.js",
   "ui/widget.js",
+  "ui/notes.js",
+  "ui/news.js",
   "ui/shell.js",
   "manifest.webmanifest",
   "icons/icon-180.png",
@@ -31,7 +35,11 @@ var FILES = [
   "lib/upcoming.js",
   "lib/rashifal.js",
   "lib/rates.js",
-  "lib/feed.js"
+  "lib/feed.js",
+  "lib/config.js",
+  "lib/custom-events.js",
+  "lib/auth.js",
+  "lib/news.js"
 ];
 
 self.addEventListener("install", function (event) {

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <title>Patro Admin</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../index.html"><span class="mark">पा</span> Patro <span class="sub">Admin</span></a>
+  </header>
+
+  <main>
+    <section class="card login" id="login" hidden>
+      <h1>Sign in to the admin panel</h1>
+      <p>Changes made here are saved straight to the app's files on GitHub, and every phone picks them up the next time Patro opens. No app update is needed.</p>
+      <form id="login-form">
+        <label class="field">
+          <span class="field-label">GitHub access token</span>
+          <input type="password" id="token" autocomplete="off" spellcheck="false" placeholder="github_pat_…" required>
+          <span class="field-hint">Only someone who can change the <b>santoshshah35/js</b> repository can sign in. See "Getting a token" below.</span>
+        </label>
+        <label class="check"><input type="checkbox" id="remember"> Keep me signed in on this device</label>
+        <button type="submit" class="btn primary" id="login-submit">Sign in</button>
+        <p class="error" id="login-error" role="alert"></p>
+      </form>
+      <details>
+        <summary>Getting a token (one time, about 2 minutes)</summary>
+        <ol>
+          <li>On github.com, open <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens</b>, and choose <b>Generate new token</b>.</li>
+          <li>Name it "Patro admin" and pick an expiry (for example 90 days).</li>
+          <li>Under <b>Repository access</b> choose <b>Only select repositories</b> → <b>santoshshah35/js</b>.</li>
+          <li>Under <b>Permissions → Repository permissions</b> set <b>Contents: Read and write</b> and <b>Actions: Read and write</b>.</li>
+          <li>Generate it, copy it (it starts with <code>github_pat_</code>) and paste it above.</li>
+        </ol>
+        <p>Give each manager their own token. Anyone with the token can change the app's content, so don't share it; you can delete it on the same GitHub page at any time.</p>
+      </details>
+    </section>
+
+    <section id="panel" hidden>
+      <div class="bar">
+        <span>Signed in as <b id="who"></b></span>
+        <label>Branch <select id="branch"></select></label>
+        <button type="button" class="btn small" id="signout">Sign out</button>
+      </div>
+      <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+      <div class="card">
+        <h1 id="tab-title"></h1>
+        <p class="muted" id="tab-help"></p>
+        <div id="body"></div>
+      </div>
+      <div class="save-bar" id="save-bar" hidden>
+        <ul class="problems" id="problems" hidden></ul>
+        <div class="save-row">
+          <span class="muted" id="save-state"></span>
+          <button type="button" class="btn primary" id="save" disabled>Save & publish</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <template id="help-template">
+    <h3>How it works</h3>
+    <p>Each section edits one file in <code>patro/content/</code> on GitHub. <b>Save & publish</b> makes a commit, so the repository's history shows who changed what, and any change can be undone there. The app checks every file before using it, and keeps its last good copy if something is wrong.</p>
+    <h3>Ads</h3>
+    <p>Choose where the banner shows, add a title and picture, and set the dates. A banner shows from its start date to its end date (both included). A closed banner stays closed on that phone, so give a new campaign a new ID.</p>
+    <h3>Login and members-only features</h3>
+    <ul>
+      <li><b>Android app, Google:</b> works without any setup. It uses the Google accounts already on the phone.</li>
+      <li><b>Facebook (Android and web)</b> and <b>Google on the web/iPhone app</b> need the web app published on GitHub Pages and the IDs in <b>Login & members</b>.</li>
+      <li>Publishing on GitHub Pages: in the repository's <b>Settings → Pages</b>, set <b>Source</b> to <b>GitHub Actions</b>. The "Patro web app" job publishes <code>https://santoshshah35.github.io/js/</code> from the main branch.</li>
+      <li>Google: in Google Cloud Console create an <b>OAuth client ID</b> of type <b>Web application</b>, add <code>https://santoshshah35.github.io</code> as an authorised JavaScript origin and <code>https://santoshshah35.github.io/js/auth.html</code> as an authorised redirect URI, and paste the Client ID.</li>
+      <li>Facebook: create an app at developers.facebook.com, add <b>Facebook Login</b>, set the valid OAuth redirect URI to <code>https://santoshshah35.github.io/js/auth.html</code>, and paste the App ID.</li>
+    </ul>
+    <p>Sign-in only unlocks features on that phone. Patro has no server, so no user list is stored anywhere.</p>
+    <h3>News</h3>
+    <p>The news job reads every source's RSS feed every 30 minutes (on the main branch) and publishes one file the app downloads. "Failed last time" usually means the site blocks the job; adding its Google News feed as a fallback fixes that.</p>
+  </template>
+
+  <script src="../lib/bs-data.js"></script>
+  <script src="../lib/bs.js"></script>
+  <script src="../lib/feed.js"></script>
+  <script src="../lib/config.js"></script>
+  <script src="../lib/custom-events.js"></script>
+  <script src="../lib/news.js"></script>
+  <script src="github.js"></script>
+  <script src="editors.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

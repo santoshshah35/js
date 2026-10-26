@@ -1,8 +1,24 @@
-# Patro notices and ads
+# Patro content
 
-`feed.json` in this folder is read by every copy of the Patro app each time
-it opens (and again if it has been in the background for 30 minutes). Edit
-it here on GitHub and the change reaches phones without a new app.
+The files in this folder are read by every copy of the Patro app each time
+it opens (and again if it has been in the background for 30 minutes), so a
+change reaches phones without a new app.
+
+| File | What it holds |
+|------|---------------|
+| `feed.json` | Ads and notices |
+| `events.json` | Your events, public holidays and sait (BS dates) |
+| `fuel.json` | Petrol, diesel, kerosene and LPG prices |
+| `news-sources.json` | RSS feeds the news job reads |
+| `config.json` | Sign-in keys and which features need sign-in |
+
+## The admin panel (easiest)
+
+Open **More → Admin panel** in the Android app, or `patro/admin/index.html`
+from GitHub Pages, and sign in with a GitHub fine-grained token that has
+*Contents: Read and write* (and *Actions: Read and write* for the "Update
+now" buttons) on this repository. Every section is a form; **Save &
+publish** checks the file with the app's own rules and commits it.
 
 ## Editing on GitHub
 

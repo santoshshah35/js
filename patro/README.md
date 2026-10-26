@@ -16,8 +16,17 @@ Patro. Not affiliated with Hamro Patro.
   from Nepal Oil Corporation (loaded by the Android app; see below)
 - BS ↔ AD date converter
 - Fixed-date national days (New Year, Republic Day, Constitution Day, ...)
-- Bottom menu: Calendar, Rashifal, Dates, Exchange, Fuel, More; swipe left
-  or right to move between them
+- News from about 28 Nepali and English news sites, collected from their
+  RSS feeds every 30 minutes: language, category and source filters,
+  search, save and share; the latest headlines on the calendar page
+- Sign in with Google or Facebook; notes on calendar days, saved news and
+  weekly/monthly rashifal can be reserved for signed-in users
+- My notes: your own notes on a day, once or every year
+- Admin panel (`admin/`): ads and notices, events, public holidays and sait,
+  fuel prices, news sources and login settings, edited with forms and saved
+  to GitHub (see `content/README.md`)
+- Bottom menu: Calendar, News, Rashifal, Dates, Exchange, Fuel, More; swipe
+  left or right to move between them
 - Android home-screen widget: today's date, tithi and the next festival
 - Back button leaves the app (closing the settings sheet first if open)
 - Notices and ads managed by an admin in `content/feed.json`, with no app
@@ -129,9 +138,27 @@ requests too.
   `converter`, `markets`) on top of `core.js` (shared state, text,
   helpers); `shell.js` runs the bottom menu, settings sheet and start-up.
 
+## News, sign-in and the admin panel
+
+- `lib/news.js` reads RSS and Atom feeds, sorts stories into categories
+  and checks the published `news.json`. `tools/fetch-news.js`, run every 30
+  minutes by `.github/workflows/patro-news.yml`, reads the sources in
+  `content/news-sources.json` and force-pushes `news.json` as the only
+  commit on the `patro-data` branch, so the history doesn't grow. When that
+  file is over two hours old, the Android app reads the feeds itself.
+- `lib/auth.js` and `ui/account.js`: sign-in without a server. The Android
+  app uses the phone's Google account picker; Facebook (and Google on the
+  web) go through the provider's page and back via `auth.html`. Sign-in
+  only unlocks features on the device; `content/config.json` says which.
+- `admin/`: a static page that edits `content/*.json` through the GitHub
+  API with a fine-grained token, checking each file with the app's own
+  parsers before committing. Open it from More → Admin panel in the app,
+  or at `https://santoshshah35.github.io/js/admin/` once GitHub Pages is on.
+
 ## Not included yet
 
-- Government public holidays, which are announced each year.
+- Government public holidays are not built in; the admin adds each year's
+  from the admin panel.
 
 In a year when a tithi changes close to the time a festival is judged, the
 festival can land a day off from a printed panchang.

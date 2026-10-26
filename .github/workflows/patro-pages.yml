@@ -1,0 +1,45 @@
+# Publishes the Patro web app (patro/) on GitHub Pages at
+# https://santoshshah35.github.io/js/ — the iPhone/web app, the admin panel
+# (admin/) and auth.html, where Google and Facebook sign-in return.
+#
+# One-time setup: repository Settings -> Pages -> Source: GitHub Actions.
+name: Patro web app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - patro/**
+      - .github/workflows/patro-pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: patro-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Collect the site
+        run: |
+          mkdir -p _site
+          cp -r patro/index.html patro/auth.html patro/styles.css patro/sw.js patro/manifest.webmanifest \
+            patro/icons patro/lib patro/ui patro/admin _site/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

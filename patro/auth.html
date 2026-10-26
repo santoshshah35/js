@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ne">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <title>Patro sign-in</title>
+  <style>
+    :root { color-scheme: light dark; --accent: #c8102e; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font: 17px/1.5 "Mukta", "Noto Sans Devanagari", system-ui, sans-serif; background: Canvas; color: CanvasText; }
+    main { max-width: 420px; padding: 24px; text-align: center; }
+    .mark { display: inline-grid; place-items: center; width: 56px; height: 56px; border-radius: 14px; background: var(--accent); color: #fff; font-weight: 700; font-size: 1.4rem; }
+    a.btn { display: inline-block; margin-top: 16px; padding: 10px 18px; border-radius: 10px; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; }
+    .error { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark" aria-hidden="true">पा</div>
+    <p id="message">लगइन हुँदैछ… / Signing in…</p>
+    <a class="btn" id="back" href="./index.html" hidden>Patro खोल्नुहोस् / Open Patro</a>
+  </main>
+  <script src="lib/auth.js"></script>
+  <script>
+    /*
+     * Google and Facebook send the browser back here after sign-in.
+     * state "web.<nonce>": the web app started it; save the user here and
+     * return to the app. state "app.<nonce>": the Android app started it in
+     * the phone's browser; hand the user back to the app by link (the app
+     * checks the nonce it sent).
+     */
+    (function () {
+      "use strict";
+      var Auth = window.PatroAuth;
+      var message = document.getElementById("message");
+      var back = document.getElementById("back");
+      var params = Auth.parseParams(location.hash);
+      var query = Auth.parseParams(location.search);
+      Object.keys(query).forEach(function (k) { if (!(k in params)) params[k] = query[k]; });
+      // Keep tokens out of the address bar and history.
+      try { history.replaceState(null, "", location.pathname); } catch (e) { /* ignored */ }
+
+      function fail(reason) {
+        message.className = "error";
+        message.textContent = "लगइन हुन सकेन / Couldn't sign in: " + reason;
+        back.hidden = false;
+      }
+
+      function facebookUser(token) {
+        return fetch(Auth.FACEBOOK_ME + encodeURIComponent(token)).then(function (r) { return r.json(); }).then(function (me) {
+          if (!me || !me.id) throw new Error((me && me.error && me.error.message) || "Facebook gave no profile");
+          var user = Auth.cleanUser({ provider: "facebook", id: me.id, name: me.name,
+            picture: me.picture && me.picture.data && me.picture.data.url });
+          if (!user) throw new Error("Facebook gave no profile");
+          return user;
+        });
+      }
+
+      var state = params.state || "";
+      var dot = state.indexOf(".");
+      var origin = state.slice(0, dot);
+      var nonce = state.slice(dot + 1);
+      if (params.error) return fail(params.error_description || params.error);
+      if (dot < 0 || !nonce) return fail("no sign-in in progress");
+
+      if (origin === "app") {
+        if (!params.access_token) return fail("no Facebook token");
+        facebookUser(params.access_token).then(function (user) {
+          var link = Auth.appReturnUrl(user, nonce);
+          back.href = link;
+          back.hidden = false;
+          message.textContent = "लगइन भयो। Patro मा फर्कंदै… / Signed in. Returning to Patro…";
+          location.href = link;
+        }).catch(function (err) { fail(err.message); });
+        return;
+      }
+
+      var pending = null;
+      try { pending = JSON.parse(localStorage.getItem("patro.auth.pending") || "null"); } catch (e) { pending = null; }
+      try { localStorage.removeItem("patro.auth.pending"); } catch (e) { /* ignored */ }
+      if (!pending || pending.nonce !== nonce) return fail("this sign-in wasn't started here, or has expired");
+
+      var getUser = pending.provider === "google"
+        ? Promise.resolve().then(function () {
+          return Auth.googleUser(params.id_token || "", { clientId: pending.clientId, nonce: nonce, now: Date.now() });
+        })
+        : facebookUser(params.access_token || "");
+      getUser.then(function (user) {
+        if (!user) throw new Error("no profile");
+        localStorage.setItem("patro.user", JSON.stringify(user));
+        message.textContent = "लगइन भयो / Signed in";
+        location.replace("./index.html");
+      }).catch(function (err) { fail(err.message); });
+    })();
+  </script>
+</body>
+</html>
