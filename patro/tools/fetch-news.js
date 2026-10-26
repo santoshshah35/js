@@ -86,12 +86,15 @@ async function main() {
     items = items.concat(got);
   });
 
-  // Recent stories only; a story with no date counts as new.
-  items = items.filter((it) => !it.published || now - it.published < MAX_AGE_MS)
-    .map((it) => (it.published && it.published > now ? { ...it, published: now } : it));
+  // Some feeds (Kathmandu Post, Annapurna Express) give no dates: such a
+  // story is dated when this job first saw it, remembered across runs.
+  const firstSeen = new Map((previous ? previous.items : []).map((it) => [it.id, it.published]));
+  items = items.map((it) => (it.published ? it : { ...it, published: firstSeen.get(it.id) || now }))
+    .map((it) => (it.published > now ? { ...it, published: now } : it))
+    .filter((it) => now - it.published < MAX_AGE_MS);
   const seen = new Set();
   items = items.filter((it) => !seen.has(it.id) && seen.add(it.id));
-  items.sort((a, b) => (b.published || now) - (a.published || now));
+  items.sort((a, b) => b.published - a.published);
   items = items.slice(0, News.MAX_ITEMS);
 
   const doc = { version: 1, updatedAt: new Date(now).toISOString(), sources: summary, items };
