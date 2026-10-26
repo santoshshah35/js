@@ -1,3 +1,53 @@
 {
-  "alerts": []
+  "alerts": [
+    {
+      "id": "alert-mvp9e8hs",
+      "level": "important",
+      "title": {
+        "ne": "Vvbbb"
+      },
+      "sentAt": "2026-10-26T12:54:57.664Z",
+      "body": {
+        "ne": "Vbbb",
+        "en": "Bbb"
+      }
+    },
+    {
+      "id": "alert-mvp9d9te",
+      "level": "breaking",
+      "title": {
+        "ne": "Vvv"
+      },
+      "sentAt": "2026-10-26T12:54:12.722Z",
+      "body": {
+        "ne": "Hhh"
+      }
+    },
+    {
+      "id": "alert-mvp9bptq",
+      "level": "breaking",
+      "title": {
+        "ne": "Bdbs",
+        "en": "Ndnn"
+      },
+      "sentAt": "2026-10-26T12:53:00.158Z",
+      "body": {
+        "ne": "Xnnn",
+        "en": "Nxndn"
+      }
+    },
+    {
+      "id": "alert-mvp99za7",
+      "level": "breaking",
+      "title": {
+        "ne": "Hello test",
+        "en": "Helo test"
+      },
+      "sentAt": "2026-10-26T12:51:39.104Z",
+      "body": {
+        "ne": "Fuc u",
+        "en": "Ffdd"
+      }
+    }
+  ]
 }
