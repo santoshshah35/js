@@ -19,6 +19,26 @@
       "image": "https://raw.githubusercontent.com/santoshshah35/js/claude/new-session-94tzzd/patro/content/ads/1793028583438-113694.jpg",
       "start": "2026-10-25",
       "end": "2026-10-29"
+    },
+    {
+      "id": "nexus-traders-2083-copy",
+      "slot": "top",
+      "kind": "ad",
+      "title": {
+        "ne": "तिहार विशेष छुट",
+        "en": "Tihar special offer"
+      },
+      "body": {
+        "ne": "सबै सामानमा २०% छुट।",
+        "en": "20% off everything."
+      },
+      "cta": {
+        "ne": "हेर्नुहोस्",
+        "en": "See offer"
+      },
+      "image": "https://raw.githubusercontent.com/santoshshah35/js/claude/new-session-94tzzd/patro/content/ads/1793028583438-113694.jpg",
+      "start": "2026-10-25",
+      "end": "2026-10-29"
     }
   ]
 }
