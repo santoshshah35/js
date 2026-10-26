@@ -10,9 +10,9 @@
   var t = UI.t;
   var $ = UI.$;
 
-  var VIEWS = ["calendar", "rashifal", "converter", "forex", "fuel", "events"];
+  var VIEWS = ["calendar", "news", "rashifal", "converter", "forex", "fuel", "events"];
   // The bottom-menu tabs in order, for swiping between them.
-  var TABS = ["calendar", "rashifal", "converter", "forex", "fuel"];
+  var TABS = ["calendar", "news", "rashifal", "converter", "forex", "fuel"];
   var SWIPE_MIN_PX = 60;
   var SWIPE_MAX_MS = 700;
   var THEME_COLORS = { light: "#c8102e", dark: "#1d1c1a" };
@@ -34,6 +34,7 @@
       language: "भाषा",
       close: "बन्द गर्नुहोस्",
       langButton: "English",
+      adminPanel: "एडमिन प्यानल (व्यवस्थापकका लागि)",
       about: "Patro: नेपाली पात्रो। तिथि, चाडपर्व र राशिफल यही उपकरणमा गणना हुन्छन्; विनिमय दर नेपाल राष्ट्र बैंक, सुनचाँदी महासंघ र नेपाल आयल निगमबाट आउँछन्।"
     },
     en: {
@@ -51,6 +52,7 @@
       language: "Language",
       close: "Close",
       langButton: "नेपाली",
+      adminPanel: "Admin panel (for the app's managers)",
       about: "Patro: a Nepali calendar. Tithi, festivals and rashifal are computed on this device; rates come from Nepal Rastra Bank, FENEGOSIDA and Nepal Oil Corporation."
     }
   });
@@ -99,8 +101,8 @@
     var start = null;
     document.addEventListener("touchstart", function (e) {
       start = null;
-      if (e.touches.length !== 1 || !$("more-sheet").hidden) return;
-      if (e.target.closest("input, select, textarea, .rates-scroll, .bottom-nav")) return;
+      if (e.touches.length !== 1 || !$("more-sheet").hidden || !$("login-sheet").hidden) return;
+      if (e.target.closest("input, select, textarea, .rates-scroll, .chips, .bottom-nav")) return;
       start = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
     }, { passive: true });
     document.addEventListener("touchend", function (e) {
@@ -153,6 +155,7 @@
     $("lang-label").textContent = t("language");
     $("sheet-close").textContent = t("close");
     $("about-text").textContent = t("about");
+    $("admin-link").textContent = t("adminPanel");
     [["system", "themeSystem"], ["light", "themeLight"], ["dark", "themeDark"]].forEach(function (pair) {
       var b = $("theme-" + pair[0]);
       b.textContent = t(pair[1]);
@@ -178,13 +181,13 @@
   }
 
   // The Android app asks this before closing on the back button: true means
-  // the page used the press (to close the settings sheet).
+  // the page used the press (to close the sign-in or settings sheet).
   root.__patroBack = function () {
-    return closeSheet();
+    return UI.account.closeLogin() || closeSheet();
   };
 
   function renderNav() {
-    [["calendar", "navCalendar"], ["rashifal", "navRashifal"], ["converter", "navConverter"],
+    [["calendar", "navCalendar"], ["news", "navNews"], ["rashifal", "navRashifal"], ["converter", "navConverter"],
       ["forex", "navForex"], ["fuel", "navFuel"], ["more", "navMore"]].forEach(function (pair) {
       $("nav-" + pair[0]).querySelector(".nav-label").textContent = t(pair[1]);
     });
@@ -210,13 +213,19 @@
   function init() {
     document.documentElement.lang = UI.state.lang;
     applyTheme(UI.state.theme);
+    // Saved admin settings and events first, so the first drawing uses them.
+    UI.remote.loadSaved();
     UI.calendar.init();
     UI.upcoming.init();
     UI.rashifal.init();
     UI.converter.init();
     UI.markets.init();
     UI.feed.init();
+    UI.account.init();
+    UI.notes.init();
+    UI.news.init();
     UI.widget.init();
+    UI.remote.init();
     renderNav();
     renderSheet();
     show(viewFromHash());

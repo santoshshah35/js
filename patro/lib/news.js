@@ -196,6 +196,10 @@
     blocks.forEach(function (block) {
       var link = linkOf(block);
       var title = plain(tag(block, "title") || "");
+      // Google News (used for sites that refuse our server) appends the
+      // site's name to each title.
+      var site = plain(tag(block, "source") || "");
+      if (site && title.slice(-(site.length + 3)) === " - " + site) title = title.slice(0, -(site.length + 3));
       if (!link || !title || seen[link]) return;
       seen[link] = true;
       var summaryRaw = tag(block, "description") || tag(block, "summary") || tag(block, "content:encoded") || tag(block, "content") || "";

@@ -15,7 +15,7 @@
     "https://raw.githubusercontent.com/santoshshah35/js/claude/new-session-94tzzd/patro/content/feed.json"
   ];
 
-  var SLOTS = ["top", "rashifal", "forex", "fuel"];
+  var SLOTS = ["top", "news", "rashifal", "forex", "fuel"];
   var KINDS = ["notice", "ad"];
   var MAX_ITEMS = 20;
   var LIMITS = { id: 64, title: 120, body: 400, cta: 40, url: 500 };

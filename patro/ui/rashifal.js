@@ -153,7 +153,8 @@
     $("rashifal-note").textContent = t("rashifalNote");
     [["day", "daily"], ["week", "weekly"], ["month", "monthly"]].forEach(function (pair) {
       var b = $("period-" + pair[0]);
-      b.textContent = t(pair[1]);
+      var locked = pair[0] !== "day" && UI.account.isLocked("rashifalPeriods");
+      b.textContent = (locked ? "🔒 " : "") + t(pair[1]);
       b.setAttribute("aria-selected", String(period === pair[0]));
     });
     $("rashifal-prev").setAttribute("aria-label", t("periodPrev"));
@@ -186,7 +187,18 @@
   }
 
   function setPeriod(p) {
+    // Weekly and monthly readings can be members-only (config.json).
+    if (p !== "day") {
+      UI.account.requireLogin("rashifalPeriods", function () { period = p; render(); });
+      return;
+    }
     period = p;
+    render();
+  }
+
+  // Back to the daily reading if the periods became members-only.
+  function checkPeriod() {
+    if (period !== "day" && UI.account.isLocked("rashifalPeriods")) period = "day";
     render();
   }
 
@@ -198,6 +210,8 @@
     });
     UI.on("day", render);
     UI.on("lang", render);
+    UI.on("user", checkPeriod);
+    UI.on("config", checkPeriod);
     render();
   }
 

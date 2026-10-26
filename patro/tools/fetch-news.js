@@ -38,7 +38,15 @@ async function readSource(source) {
     try {
       const xml = await get(url);
       const items = News.parseFeedXml(xml, source, PER_SOURCE);
-      if (items.length) return { items, notes: notes.concat(`${url} -> ${items.length} stories`) };
+      if (items.length) {
+        // Shows the raw item when dates or pictures weren't found, so the
+        // parser can be taught that feed's format.
+        if (items.some((it) => !it.published || !it.image)) {
+          const first = /<(item|entry)[\s>][\s\S]*?<\/\1>/i.exec(xml);
+          notes.push(`some stories lack a date or picture; first item: ${first ? first[0].replace(/\s+/g, " ").slice(0, 600) : "?"}`);
+        }
+        return { items, notes: notes.concat(`${url} -> ${items.length} stories`) };
+      }
       notes.push(`${url} -> no stories (starts: ${xml.replace(/\s+/g, " ").slice(0, 160)})`);
     } catch (err) {
       notes.push(`${url} -> ${err.message}${err.cause ? " (" + err.cause.message + ")" : ""}`);

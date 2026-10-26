@@ -71,6 +71,7 @@
     setTimeout(publish, 1500);
     UI.on("lang", publish);
     UI.on("tick", publish);
+    UI.on("events", publish);
   }
 
   UI.widget = { init: init, rows: rows };

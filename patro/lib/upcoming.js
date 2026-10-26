@@ -9,15 +9,28 @@
   var Lunar = node ? require("./lunar.js") : root.PatroLunar;
   var Events = node ? require("./events.js") : root.PatroEvents;
 
+  // Other lists of events by name (the admin's events, the user's notes),
+  // each a function(bsDate) returning events.
+  var extra = {};
+
+  /** Adds or replaces a named list of events; null removes it. */
+  function setSource(name, fn) {
+    if (fn) extra[name] = fn;
+    else delete extra[name];
+  }
+
   /**
-   * Every festival and observance on a civil day.
+   * Every festival and observance on a civil day. Events from the admin can
+   * carry kind "holiday" or "sait"; the user's notes carry kind "note".
    * @param {number} dayNumber days since 1970-01-01
-   * @returns {{ne:string, en:string}[]}
+   * @returns {{ne:string, en:string, kind?:string}[]}
    */
   function eventsOn(dayNumber) {
     var bs = BS.dayNumberToBs(dayNumber);
     var ad = BS.fromDayNumber(dayNumber);
-    return Lunar.festivalsOn(dayNumber).concat(Events.eventsOn(bs, ad));
+    var out = Lunar.festivalsOn(dayNumber).concat(Events.eventsOn(bs, ad));
+    Object.keys(extra).forEach(function (name) { out = out.concat(extra[name](bs)); });
+    return out;
   }
 
   /**
@@ -40,7 +53,7 @@
     return out;
   }
 
-  var api = { eventsOn: eventsOn, upcoming: upcoming };
+  var api = { eventsOn: eventsOn, upcoming: upcoming, setSource: setSource };
 
   if (node) module.exports = api;
   else root.PatroUpcoming = api;

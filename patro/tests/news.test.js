@@ -103,3 +103,9 @@ test("time ago uses the largest whole unit", () => {
   assert.deepEqual(News.timeAgo(now - 3 * 3600000, now), { unit: "hour", n: 3 });
   assert.deepEqual(News.timeAgo(now - 50 * 3600000, now), { unit: "day", n: 2 });
 });
+
+test("Google News titles lose the appended site name", () => {
+  const xml = `<rss><channel><item><title>चुनाव सम्पन्न - Kantipur</title><link>https://news.google.com/rss/articles/abc</link>
+<source url="https://ekantipur.com">Kantipur</source></item></channel></rss>`;
+  assert.equal(News.parseFeedXml(xml, source)[0].title, "चुनाव सम्पन्न");
+});

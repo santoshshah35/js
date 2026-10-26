@@ -24,6 +24,9 @@
       sunrise: "सूर्योदय",
       sunset: "सूर्यास्त",
       saturday: "सार्वजनिक बिदा (शनिबार)",
+      holiday: "सार्वजनिक बिदा",
+      sait: "साइत",
+      note: "मेरो नोट",
       bs: "बि.सं.",
       estimated: "{year} सालको आधिकारिक पात्रो अझै प्रकाशित भएको छैन। यहाँका महिनाका दिन सूर्य सिद्धान्तबाट गणना गरिएका अनुमान हुन्।",
       footer: "तिथि र चाडपर्व काठमाडौंका लागि खगोलीय गणनाबाट निकालिएका हुन्। तिथि सूर्योदयको नजिक फेरिने वर्ष चाडपर्व प्रकाशित पात्रोभन्दा एक दिन फरक पर्न सक्छ। सरकारी बिदा समावेश छैनन्।"
@@ -35,6 +38,9 @@
       sunrise: "Sunrise",
       sunset: "Sunset",
       saturday: "Weekly holiday (Saturday)",
+      holiday: "Public holiday",
+      sait: "Sait",
+      note: "My note",
       bs: "BS",
       estimated: "No official calendar for {year} BS has been published yet. Month lengths here are estimates computed from the Surya Siddhanta.",
       footer: "Tithi and festivals are computed astronomically for Kathmandu. In a year when the tithi changes close to sunrise, a festival can be a day off from a printed panchang. Government holidays are not included."
@@ -108,6 +114,7 @@
       var classes = ["day"];
       if (w === 6) classes.push("sat");
       if (events.length) classes.push("has-event");
+      if (events.some(function (ev) { return ev.kind === "holiday"; })) classes.push("holiday");
       if (tithi.number === 15) classes.push("full-moon");
       if (tithi.number === 30) classes.push("new-moon");
       if (n === today) classes.push("is-today");
@@ -165,7 +172,10 @@
 
     var tags = el("div", "tags");
     if (w === 6) tags.appendChild(el("span", "tag", t("saturday")));
-    events.forEach(function (ev) { tags.appendChild(el("span", "tag", UI.pick(ev))); });
+    events.forEach(function (ev) {
+      var label = ev.kind && ev.kind !== "event" ? t(ev.kind) + ": " : "";
+      tags.appendChild(el("span", "tag" + (ev.kind ? " tag-" + ev.kind : ""), label + UI.pick(ev)));
+    });
     if (tags.childNodes.length) box.appendChild(tags);
   }
 
@@ -208,6 +218,7 @@
     UI.on("day", function () { renderCalendar(); renderDetail(); });
     UI.on("lang", render);
     UI.on("tick", function () { renderHeader(); renderCalendar(); });
+    UI.on("events", function () { renderCalendar(); renderDetail(); });
     render();
   }
 

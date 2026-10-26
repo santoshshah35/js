@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Nepali Bikram Sambat calendar with tithi, festivals, rashifal, forex and gold rates, and a date converter.">
+  <meta name="description" content="Nepali Bikram Sambat calendar with tithi, festivals, news, rashifal, forex and gold rates, and a date converter.">
   <title>Patro</title>
   <meta name="theme-color" content="#c8102e">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -61,11 +61,42 @@
 
       <aside class="side">
         <section class="card day-detail" id="day-detail" aria-live="polite"></section>
+        <section class="card notes-card" id="notes-card"></section>
+        <section class="card home-news" id="home-news" hidden>
+          <h2 id="home-news-title"></h2>
+          <ul class="news-list" id="home-news-list"></ul>
+          <button type="button" class="link-btn" id="home-news-all"></button>
+        </section>
         <section class="card">
           <h2 id="events-title"></h2>
           <ul class="event-list" id="event-list"></ul>
         </section>
       </aside>
+    </div>
+
+    <div class="screen narrow" data-view="news" hidden>
+      <div class="feed-slot" data-feed-slot="news" hidden></div>
+      <section class="card" aria-labelledby="news-title">
+        <div class="card-head">
+          <h1 class="card-title" id="news-title"></h1>
+          <div class="news-head-actions">
+            <p class="muted" id="news-meta" aria-live="polite"></p>
+            <button type="button" class="icon-btn news-refresh" id="news-refresh">⟳</button>
+          </div>
+        </div>
+        <div class="segmented three" role="group" aria-label="Language">
+          <button type="button" id="news-lang-all" aria-pressed="true"></button>
+          <button type="button" id="news-lang-ne" aria-pressed="false" lang="ne"></button>
+          <button type="button" id="news-lang-en" aria-pressed="false" lang="en"></button>
+        </div>
+        <div class="chips" id="news-cats" role="group" aria-label="Category"></div>
+        <div class="news-tools">
+          <select id="news-source" aria-label="Source"></select>
+          <input type="search" id="news-search" autocomplete="off">
+        </div>
+        <ul class="news-list" id="news-list"></ul>
+        <button type="button" class="btn news-more" id="news-more" hidden></button>
+      </section>
     </div>
 
     <div class="screen" data-view="rashifal" hidden>
@@ -173,6 +204,10 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
       <span class="nav-label"></span>
     </button>
+    <button type="button" class="nav-item" id="nav-news" data-target="news">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5h12v13a1.5 1.5 0 0 0 1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M16.5 9h3v9.5a1.5 1.5 0 0 1-3 0M7.5 9h6M7.5 12.5h6M7.5 16h4"/></svg>
+      <span class="nav-label"></span>
+    </button>
     <button type="button" class="nav-item" id="nav-rashifal" data-target="rashifal">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 14.6A8 8 0 1 1 9.4 4.5a6.4 6.4 0 0 0 10.1 10.1z"/><path d="M17 3.5l.6 1.5 1.5.6-1.5.6-.6 1.5-.6-1.5-1.5-.6 1.5-.6z"/></svg>
       <span class="nav-label"></span>
@@ -198,6 +233,7 @@
   <div class="sheet-backdrop" id="more-sheet" hidden>
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="more-title">
       <h2 id="more-title"></h2>
+      <div class="setting" id="account-box"></div>
       <div class="setting">
         <p class="setting-label" id="theme-label"></p>
         <div class="segmented three" role="radiogroup" aria-labelledby="theme-label">
@@ -214,7 +250,22 @@
         </div>
       </div>
       <p class="fineprint" id="about-text"></p>
+      <a class="link-btn admin-link" id="admin-link" href="admin/index.html"></a>
       <button type="button" class="btn sheet-close" id="sheet-close"></button>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop" id="login-sheet" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="login-title">
+      <h2 id="login-title"></h2>
+      <p id="login-why"></p>
+      <div class="login-buttons">
+        <button type="button" class="btn login-btn login-google" id="login-google"></button>
+        <button type="button" class="btn login-btn login-facebook" id="login-facebook"></button>
+      </div>
+      <p class="login-status" id="login-status" role="status"></p>
+      <p class="fineprint" id="login-privacy"></p>
+      <button type="button" class="btn sheet-close" id="login-close"></button>
     </div>
   </div>
 
@@ -227,7 +278,13 @@
   <script src="lib/rashifal.js"></script>
   <script src="lib/rates.js"></script>
   <script src="lib/feed.js"></script>
+  <script src="lib/config.js"></script>
+  <script src="lib/custom-events.js"></script>
+  <script src="lib/auth.js"></script>
+  <script src="lib/news.js"></script>
   <script src="ui/core.js"></script>
+  <script src="ui/remote.js"></script>
+  <script src="ui/account.js"></script>
   <script src="ui/calendar.js"></script>
   <script src="ui/upcoming.js"></script>
   <script src="ui/rashifal.js"></script>
@@ -235,6 +292,8 @@
   <script src="ui/markets.js"></script>
   <script src="ui/feed.js"></script>
   <script src="ui/widget.js"></script>
+  <script src="ui/notes.js"></script>
+  <script src="ui/news.js"></script>
   <script src="ui/shell.js"></script>
 </body>
 </html>

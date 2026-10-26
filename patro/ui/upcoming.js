@@ -115,6 +115,7 @@
     });
     UI.on("lang", function () { renderStrip(); renderList(); });
     UI.on("tick", function () { renderStrip(); renderList(); });
+    UI.on("events", function () { renderStrip(); renderList(); });
     renderStrip();
     renderList();
   }

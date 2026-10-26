@@ -1,0 +1,8 @@
+{
+  "login": {
+    "googleClientId": "",
+    "facebookAppId": "",
+    "webAddress": "https://santoshshah35.github.io/js/"
+  },
+  "membersOnly": ["notes", "newsSave"]
+}
