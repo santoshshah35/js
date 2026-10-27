@@ -54,7 +54,10 @@
 
   /** True when a feature needs sign-in and nobody is signed in. */
   function isLocked(feature, config, user) {
-    return !user && (config || DEFAULTS).membersOnly.indexOf(feature) >= 0;
+    var c = config || DEFAULTS;
+    // With no sign-in set up nobody could unlock it, so nothing is locked.
+    if (!c.login.googleClientId && !c.login.facebookAppId) return false;
+    return !user && c.membersOnly.indexOf(feature) >= 0;
   }
 
   var api = {

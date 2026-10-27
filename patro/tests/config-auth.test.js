@@ -15,6 +15,9 @@ const read = (f) => fs.readFileSync(path.join(__dirname, "..", "content", f), "u
 test("the published config and events files are valid", () => {
   const config = Config.parseConfig(read("config.json"));
   assert.ok(Array.isArray(config.membersOnly));
+  // Members-only features must not lock everyone out while no sign-in is set up.
+  const noLogin = Config.parseConfig({ login: {}, membersOnly: ["rashifalPeriods"] });
+  assert.equal(Config.isLocked("rashifalPeriods", noLogin, null), false);
   assert.equal(Custom.parseEvents(read("events.json")).skipped, 0);
 });
 
