@@ -237,6 +237,11 @@ button:focus-visible, select:focus-visible, input:focus-visible, .day:focus-visi
 .converter-fields input, .converter-fields select { width: 100%; min-width: 0; }
 .converter-result { margin: 0; min-height: 1.5em; font-weight: 600; }
 .converter-result.error { color: var(--holiday); font-weight: 400; }
+.tool-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tool-fields input, .tool-fields select, #words-value { width: 100%; min-width: 0; }
+.tool-result { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.tool-result li { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.tool-result li.error { color: var(--holiday); }
 
 .event-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .event-list li { display: flex; gap: 12px; align-items: baseline; }

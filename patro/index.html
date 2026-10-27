@@ -141,6 +141,19 @@
           <button type="button" class="link-btn" id="conv-show" hidden></button>
         </form>
       </section>
+      <section class="card">
+        <h2 class="card-title" id="land-title"></h2>
+        <div class="tool-fields">
+          <input type="number" id="land-value" inputmode="decimal" min="0" step="any">
+          <select id="land-unit"></select>
+        </div>
+        <ul class="tool-result" id="land-result" aria-live="polite"></ul>
+      </section>
+      <section class="card">
+        <h2 class="card-title" id="words-title"></h2>
+        <input type="text" id="words-value" inputmode="decimal" autocomplete="off">
+        <ul class="tool-result" id="words-result" aria-live="polite"></ul>
+      </section>
     </div>
 
     <div class="screen" data-view="forex" hidden>
@@ -301,6 +314,7 @@
   <script src="lib/trending.js"></script>
   <script src="lib/alerts.js"></script>
   <script src="lib/profile.js"></script>
+  <script src="lib/tools.js"></script>
   <script src="ui/core.js"></script>
   <script src="ui/remote.js"></script>
   <script src="ui/account.js"></script>
@@ -310,6 +324,7 @@
   <script src="ui/upcoming.js"></script>
   <script src="ui/rashifal.js"></script>
   <script src="ui/converter.js"></script>
+  <script src="ui/tools.js"></script>
   <script src="ui/markets.js"></script>
   <script src="ui/feed.js"></script>
   <script src="ui/widget.js"></script>

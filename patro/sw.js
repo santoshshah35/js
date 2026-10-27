@@ -6,7 +6,7 @@
  */
 "use strict";
 
-var VERSION = "patro-v9";
+var VERSION = "patro-v10";
 var FILES = [
   "./",
   "index.html",
@@ -20,6 +20,7 @@ var FILES = [
   "ui/upcoming.js",
   "ui/rashifal.js",
   "ui/converter.js",
+  "ui/tools.js",
   "ui/markets.js",
   "ui/feed.js",
   "ui/widget.js",
@@ -44,7 +45,8 @@ var FILES = [
   "lib/news.js",
   "lib/trending.js",
   "lib/alerts.js",
-  "lib/profile.js"
+  "lib/profile.js",
+  "lib/tools.js"
 ];
 
 self.addEventListener("install", function (event) {

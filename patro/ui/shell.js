@@ -254,6 +254,7 @@
     UI.upcoming.init();
     UI.rashifal.init();
     UI.converter.init();
+    UI.tools.init();
     UI.markets.init();
     UI.feed.init();
     UI.profile.init();

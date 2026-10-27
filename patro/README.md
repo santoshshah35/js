@@ -15,6 +15,9 @@ Patro. Not affiliated with Hamro Patro.
   silver prices from FENEGOSIDA, and petrol, diesel, kerosene and LPG prices
   from Nepal Oil Corporation (loaded by the Android app; see below)
 - BS ↔ AD date converter
+- Land area converter (ropani-aana-paisa-daam, bigha-kattha-dhur, square
+  feet and metres) and numbers or amounts in words, in Nepali and English
+  (lakh, crore, arab, kharab; rupees and paisa), under the date converter
 - Fixed-date national days (New Year, Republic Day, Constitution Day, ...)
 - News from 30 Nepali and English news sites, collected from their RSS
   feeds every 30 minutes, with Nepal Post Daily and Yatra Daily as priority
