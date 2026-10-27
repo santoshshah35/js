@@ -19,6 +19,7 @@
   var CACHE_KEY = "patro.alerts";
   var CLOSED_KEY = "patro.alerts.closed";
   var NOTIFIED_KEY = "patro.alerts.notified";
+  var SEEN_KEY = "patro.alerts.seen";
   var SETTING_KEY = "patro.notifications";
   var REFRESH_MS = 5 * 60 * 1000;
 
@@ -30,6 +31,10 @@
       alertImportant: "महत्वपूर्ण",
       alertInfo: "सूचना",
       alertClose: "बन्द गर्नुहोस्",
+      inboxTitle: "सूचनाहरू",
+      inboxEmpty: "अहिलेसम्म कुनै सूचना छैन।",
+      inboxButton: "सूचनाहरू",
+      inboxButtonNew: "सूचनाहरू ({n} नयाँ)",
       notifications: "ब्रेकिङ न्युज सूचना (नोटिफिकेसन)",
       notifyOn: "खुला",
       notifyOff: "बन्द",
@@ -41,6 +46,10 @@
       alertImportant: "Important",
       alertInfo: "Notice",
       alertClose: "Close",
+      inboxTitle: "Notifications",
+      inboxEmpty: "No notifications yet.",
+      inboxButton: "Notifications",
+      inboxButtonNew: "Notifications ({n} new)",
       notifications: "Breaking news notifications",
       notifyOn: "On",
       notifyOff: "Off",
@@ -103,6 +112,63 @@
     strip.appendChild(close);
   }
 
+  // ---- The bell in the header and its list ----
+
+  function unseen() {
+    var seen = readJson(SEEN_KEY, []);
+    return alerts.filter(function (a) { return seen.indexOf(a.id) < 0; });
+  }
+
+  function renderBell() {
+    var count = unseen().length;
+    $("bell-dot").hidden = !count;
+    $("bell-btn").setAttribute("aria-label", count ? UI.fill(t("inboxButtonNew"), { n: UI.num(count) }) : t("inboxButton"));
+  }
+
+  function renderInbox(fresh) {
+    var list = $("notify-list");
+    UI.clear(list);
+    $("notify-title").textContent = t("inboxTitle");
+    $("notify-close").textContent = t("alertClose");
+    if (!alerts.length) {
+      list.appendChild(el("li", "notify-empty", t("inboxEmpty")));
+      return;
+    }
+    alerts.slice().sort(function (a, b) { return b.sentAt - a.sentAt; }).forEach(function (a) {
+      var li = el("li", fresh.indexOf(a.id) >= 0 ? "is-new" : null);
+      // Same "5 min ago" wording as the news list.
+      var age = root.PatroNews.timeAgo(a.sentAt, Date.now());
+      var ago = UI.fill(t({ now: "agoNow", min: "agoMin", hour: "agoHour", day: "agoDay" }[age.unit]), { n: UI.num(age.n) });
+      li.appendChild(el("span", "notify-meta", t(LEVEL_TEXT[a.level]) + " · " + ago));
+      var title = el(a.link ? "a" : "strong", null, UI.pick(a.title));
+      if (a.link) {
+        title.href = a.link;
+        title.target = "_blank";
+        title.rel = "noopener";
+      }
+      li.appendChild(title);
+      if (a.body) li.appendChild(el("span", "notify-text", UI.pick(a.body)));
+      list.appendChild(li);
+    });
+  }
+
+  function openInbox() {
+    var fresh = unseen().map(function (a) { return a.id; });
+    renderInbox(fresh);
+    // Opening the list counts as reading everything in it.
+    writeJson(SEEN_KEY, readJson(SEEN_KEY, []).concat(fresh).slice(-100));
+    renderBell();
+    $("notify-sheet").hidden = false;
+    $("notify-close").focus();
+  }
+
+  function closeInbox() {
+    if ($("notify-sheet").hidden) return false;
+    $("notify-sheet").hidden = true;
+    $("bell-btn").focus();
+    return true;
+  }
+
   // ---- Browser notifications while the page is open ----
 
   function notifyInBrowser() {
@@ -130,6 +196,7 @@
   function use(body) {
     alerts = Alerts.parseAlerts(body).alerts;
     render();
+    renderBell();
     notifyInBrowser();
   }
 
@@ -181,12 +248,22 @@
     }
     $("notify-on").addEventListener("click", function () { setEnabled(true); });
     $("notify-off").addEventListener("click", function () { setEnabled(false); });
+    $("bell-btn").addEventListener("click", openInbox);
+    $("notify-close").addEventListener("click", closeInbox);
+    $("notify-sheet").addEventListener("click", function (e) {
+      if (e.target === $("notify-sheet")) closeInbox();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeInbox();
+    });
+    renderBell();
     // Tell the Android app the current choice and language for its
     // background checks.
     var bridge = native();
     if (bridge) bridge.setNotifications(enabled(), UI.state.lang);
     UI.on("lang", function () {
       render();
+      renderBell();
       renderSetting();
       if (native()) native().setNotifications(enabled(), UI.state.lang);
     });
@@ -201,5 +278,5 @@
     });
   }
 
-  UI.alerts = { init: init };
+  UI.alerts = { init: init, closeInbox: closeInbox };
 })(this);

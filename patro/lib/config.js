@@ -19,7 +19,9 @@
 
   var DEFAULTS = {
     login: { googleClientId: null, facebookAppId: null, webAddress: null },
-    membersOnly: ["notes", "newsSave"]
+    membersOnly: ["notes", "newsSave"],
+    // Contact sync's Firebase project; both null turns the feature off.
+    firebase: { apiKey: null, projectId: null }
   };
 
   /** Addresses of a file in patro/content/, in the order to try them. */
@@ -40,7 +42,11 @@
     if (!json || typeof json !== "object") throw new Error("Config is not an object");
     var login = json.login && typeof json.login === "object" ? json.login : {};
     var web = match(login.webAddress, /^https:\/\/[^\s"'<>?#]+$/i);
+    var fb = json.firebase && typeof json.firebase === "object" ? json.firebase : {};
+    var apiKey = match(fb.apiKey, /^AIza[0-9A-Za-z_-]{35}$/);
+    var projectId = match(fb.projectId, /^[a-z][a-z0-9-]{4,29}$/);
     return {
+      firebase: apiKey && projectId ? { apiKey: apiKey, projectId: projectId } : { apiKey: null, projectId: null },
       login: {
         googleClientId: match(login.googleClientId, /^[0-9]{6,}-[a-z0-9]+\.apps\.googleusercontent\.com$/),
         facebookAppId: match(login.facebookAppId, /^[0-9]{5,20}$/),
@@ -52,11 +58,15 @@
     };
   }
 
-  /** True when a feature needs sign-in and nobody is signed in. */
-  function isLocked(feature, config, user) {
+  /**
+   * True when a feature needs sign-in and nobody is signed in.
+   * @param {boolean} [phoneGoogle] the Android app's own Google sign-in,
+   *   which needs no key, is available
+   */
+  function isLocked(feature, config, user, phoneGoogle) {
     var c = config || DEFAULTS;
-    // With no sign-in set up nobody could unlock it, so nothing is locked.
-    if (!c.login.googleClientId && !c.login.facebookAppId) return false;
+    // With no way to sign in here nobody could unlock it, so nothing is locked.
+    if (!phoneGoogle && !c.login.googleClientId && !c.login.facebookAppId) return false;
     return !user && c.membersOnly.indexOf(feature) >= 0;
   }
 

@@ -32,6 +32,11 @@ Patro. Not affiliated with Hamro Patro.
 - Sign in with Google or Facebook; notes on calendar days, saved news and
   weekly/monthly rashifal can be reserved for signed-in users
 - My notes: your own notes on a day, once or every year
+- Header: notification bell (admin notifications, with a dot for unread)
+  and your profile picture, which opens your profile or sign-in
+- Friends on Patro (More): sync phone contacts and see how many of them
+  use Patro. Numbers become one-way codes on the phone and only the codes
+  are sent; needs a Firebase project (see below)
 - Web admin panel (`admin/`, not part of the app): push notifications, ads
   and notices, events, public holidays and sait, fuel prices, news sources
   and login settings, edited with forms and saved to GitHub (see
@@ -178,3 +183,24 @@ requests too.
 
 In a year when a tithi changes close to the time a festival is judged, the
 festival can land a day off from a printed panchang.
+
+## Contact sync (Firebase)
+
+"Friends on Patro" stays hidden until the admin panel's **Login & members**
+page has a Firebase API key and project ID. One-time setup in the
+[Firebase console](https://console.firebase.google.com):
+
+1. Create a project and register a **Web app**; copy `apiKey` and
+   `projectId` into the admin panel and publish.
+2. **Authentication → Sign-in method → Anonymous → Enable.** Each install
+   gets an anonymous account; no phone verification or paid plan is needed.
+3. **Firestore Database → Create database**, location `asia-south1`,
+   production mode, then paste `firebase/firestore.rules` into **Rules** and
+   publish.
+
+Each install stores one document, `members/<code>`, where the code is the
+SHA-256 of its Nepali mobile number (with a fixed prefix). Sync reads the
+phone's contacts, turns each number into the same code on the phone, and
+asks Firestore which codes exist; the rules allow checking a code but not
+listing them. Numbers aren't verified, so someone could register a number
+that isn't theirs: fine for a friend count, not for chat.

@@ -4,6 +4,8 @@ import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.database.Cursor;
+import android.provider.ContactsContract;
 import android.graphics.Color;
 import android.os.Build;
 import android.view.View;
@@ -21,6 +23,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -31,6 +34,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -57,6 +61,10 @@ public class MainActivity extends Activity {
     private static final int REQUEST_GOOGLE_ACCOUNT = 1;
     private static final int REQUEST_PHOTO = 2;
     private static final int REQUEST_NOTIFICATIONS = 3;
+    private static final int REQUEST_CONTACTS = 4;
+    private static final String READ_CONTACTS = "android.permission.READ_CONTACTS";
+    // More than any real address book; keeps the page's work bounded.
+    private static final int MAX_CONTACT_NUMBERS = 10000;
     private static final String POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS";
     // Facebook's sign-in page; it returns through auth.html and patro://auth.
     private static final String FACEBOOK_AUTH = "https://www.facebook.com/";
@@ -265,6 +273,47 @@ public class MainActivity extends Activity {
         callPage("__patroAuthDone", user.toString());
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        super.onRequestPermissionsResult(requestCode, permissions, results);
+        if (requestCode != REQUEST_CONTACTS) return;
+        if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) loadContacts();
+        else callPage("__patroContacts", "denied");
+    }
+
+    /** Sends the page every phone number in the address book (numbers only, no names). */
+    private void loadContacts() {
+        pool.execute(new Runnable() {
+            @Override
+            public void run() {
+                Set<String> numbers = new LinkedHashSet<String>();
+                Cursor c = null;
+                try {
+                    c = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            new String[] {ContactsContract.CommonDataKinds.Phone.NUMBER}, null, null, null);
+                    while (c != null && c.moveToNext() && numbers.size() < MAX_CONTACT_NUMBERS) {
+                        String n = c.getString(0);
+                        // Digits and + only, so nothing else reaches the page's script.
+                        if (n != null) n = n.replaceAll("[^0-9+]", "");
+                        if (n != null && n.length() >= 7) numbers.add(n);
+                    }
+                } catch (Throwable e) {
+                    callPage("__patroContacts", "error");
+                    return;
+                } finally {
+                    if (c != null) c.close();
+                }
+                final String json = new JSONArray(numbers).toString();
+                main.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        callPage("__patroContacts", json);
+                    }
+                });
+            }
+        });
+    }
+
     private void callPage(String function, String argument) {
         if (isFinishing()) return;
         web.evaluateJavascript("window." + function + " && window." + function + "("
@@ -323,6 +372,21 @@ public class MainActivity extends Activity {
                 @Override
                 public void run() {
                     applyBars(mode);
+                }
+            });
+        }
+
+        /** ui/contacts.js: asks for the contacts permission if needed, then sends the numbers. */
+        @JavascriptInterface
+        public void readContacts() {
+            main.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                        requestPermissions(new String[] {READ_CONTACTS}, REQUEST_CONTACTS);
+                    } else {
+                        loadContacts();
+                    }
                 }
             });
         }

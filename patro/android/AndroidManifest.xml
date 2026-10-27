@@ -10,6 +10,8 @@
     <!-- Breaking-news notifications, checked in the background. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Contact sync: numbers are turned into one-way codes before anything leaves the phone. -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <application
         android:label="@string/app_name"

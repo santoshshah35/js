@@ -186,7 +186,7 @@
   // The Android app asks this before closing on the back button: true means
   // the page used the press (to close the sign-in or settings sheet).
   root.__patroBack = function () {
-    return UI.profile.close() || UI.account.closeLogin() || closeSheet();
+    return UI.alerts.closeInbox() || UI.profile.close() || UI.account.closeLogin() || closeSheet();
   };
 
   function renderNav() {
@@ -255,6 +255,7 @@
     UI.rashifal.init();
     UI.converter.init();
     UI.tools.init();
+    UI.contacts.init();
     UI.markets.init();
     UI.feed.init();
     UI.profile.init();

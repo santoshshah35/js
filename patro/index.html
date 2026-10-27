@@ -30,6 +30,11 @@
     <div class="topbar-actions">
       <span class="clock" id="clock" title="Nepal Time (UTC+05:45)"></span>
       <button type="button" class="lang-toggle" id="lang-toggle" aria-label="Switch language"></button>
+      <button type="button" class="head-btn" id="bell-btn" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg>
+        <span class="bell-dot" id="bell-dot" hidden></span>
+      </button>
+      <button type="button" class="head-btn avatar-btn" id="avatar-btn" aria-haspopup="dialog"></button>
     </div>
   </header>
 
@@ -249,6 +254,15 @@
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="more-title">
       <h2 id="more-title"></h2>
       <div class="setting" id="account-box"></div>
+      <div class="setting contacts-box" id="contacts-box" hidden>
+        <p class="setting-label" id="contacts-label"></p>
+        <div class="tool-fields">
+          <input type="tel" id="contacts-me" inputmode="tel" autocomplete="tel">
+          <button type="button" class="btn btn-primary" id="contacts-sync"></button>
+        </div>
+        <p class="converter-result" id="contacts-result" role="status"></p>
+        <p class="fineprint" id="contacts-note"></p>
+      </div>
       <div class="setting">
         <p class="setting-label" id="theme-label"></p>
         <div class="segmented three" role="radiogroup" aria-labelledby="theme-label">
@@ -274,6 +288,14 @@
       </div>
       <p class="fineprint" id="about-text"></p>
       <button type="button" class="btn sheet-close" id="sheet-close"></button>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop" id="notify-sheet" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="notify-title">
+      <h2 id="notify-title"></h2>
+      <ul class="notify-list" id="notify-list"></ul>
+      <button type="button" class="btn sheet-close" id="notify-close"></button>
     </div>
   </div>
 
@@ -315,6 +337,7 @@
   <script src="lib/alerts.js"></script>
   <script src="lib/profile.js"></script>
   <script src="lib/tools.js"></script>
+  <script src="lib/contacts.js"></script>
   <script src="ui/core.js"></script>
   <script src="ui/remote.js"></script>
   <script src="ui/account.js"></script>
@@ -325,6 +348,7 @@
   <script src="ui/rashifal.js"></script>
   <script src="ui/converter.js"></script>
   <script src="ui/tools.js"></script>
+  <script src="ui/contacts.js"></script>
   <script src="ui/markets.js"></script>
   <script src="ui/feed.js"></script>
   <script src="ui/widget.js"></script>

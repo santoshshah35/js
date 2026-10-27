@@ -227,8 +227,13 @@
    * Runs an action, first asking the user to sign in if the admin made the
    * feature members-only.
    */
+  function phoneGoogle() {
+    var bridge = native();
+    return Boolean(bridge && typeof bridge.signInGoogle === "function");
+  }
+
   function requireLogin(feature, action) {
-    if (!Config.isLocked(feature, UI.state.config, UI.state.user)) {
+    if (!isLocked(feature)) {
       action();
       return;
     }
@@ -237,7 +242,7 @@
   }
 
   function isLocked(feature) {
-    return Config.isLocked(feature, UI.state.config, UI.state.user);
+    return Config.isLocked(feature, UI.state.config, UI.state.user, phoneGoogle());
   }
 
   function init() {

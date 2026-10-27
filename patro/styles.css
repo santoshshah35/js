@@ -106,8 +106,28 @@ button, select, input { font: inherit; color: inherit; }
 .today { justify-self: center; text-align: center; }
 .today-bs { font-weight: 700; font-size: 1.1rem; }
 .today-meta { color: var(--muted); font-size: 0.875rem; }
-.topbar-actions { display: flex; align-items: center; gap: 12px; }
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
 .clock { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.9rem; }
+/* Notification bell and profile picture, top right */
+.head-btn {
+  position: relative; display: grid; place-items: center;
+  width: 36px; height: 36px; padding: 0; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text); cursor: pointer;
+}
+.head-btn:hover { border-color: var(--muted); }
+.avatar-btn { overflow: hidden; font-weight: 700; color: var(--accent); background: var(--accent-soft); }
+.avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
+.bell-dot {
+  position: absolute; top: 4px; right: 5px; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--holiday); border: 2px solid var(--surface);
+}
+.notify-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 60vh; overflow: auto; }
+.notify-list li { padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; display: grid; gap: 2px; }
+.notify-list li.is-new { border-color: var(--accent); }
+.notify-list a { color: inherit; }
+.notify-meta { font-size: 0.8rem; color: var(--muted); }
+.notify-text { font-size: 0.9rem; }
+.notify-empty { color: var(--muted); }
 .lang-toggle, .btn {
   border: 1px solid var(--border);
   background: var(--surface-2);

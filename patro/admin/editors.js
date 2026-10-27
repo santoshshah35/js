@@ -527,6 +527,8 @@
       if (model.login.googleClientId && !parsed.login.googleClientId) p.push("The Google Client ID should look like 1234-abc.apps.googleusercontent.com.");
       if (model.login.facebookAppId && !parsed.login.facebookAppId) p.push("The Facebook App ID is a number.");
       if (model.login.webAddress && !parsed.login.webAddress) p.push("The web address must start with https://.");
+      var fb = model.firebase || {};
+      if ((fb.apiKey || fb.projectId) && !parsed.firebase.apiKey) p.push("Contact sync needs both the Firebase API key (starts with AIza, 39 characters) and the project ID (lowercase letters, digits and dashes).");
       return p;
     },
     serialize: pretty,
@@ -551,8 +553,18 @@
         field("Google Client ID (web)", input(model.login.googleClientId, function (v) { set("googleClientId", v); }, { placeholder: "1234-abc.apps.googleusercontent.com" }),
           "Google Cloud Console → APIs & Services → Credentials → OAuth client ID → Web application."),
         field("Facebook App ID", input(model.login.facebookAppId, function (v) { set("facebookAppId", v); }, { placeholder: "123456789012345", inputmode: "numeric" }),
-          "developers.facebook.com → My Apps → your app → App ID. Add Facebook Login with the redirect address above.")
+          "developers.facebook.com → My Apps → your app → App ID. Add Facebook Login with the redirect address above."),
+        h("h3", { text: "Contact sync (Firebase)" }),
+        field("Firebase API key", input(model.firebase && model.firebase.apiKey, function (v) { setFb("apiKey", v); }, { placeholder: "AIza..." }),
+          "Firebase console → Project settings → General → Your apps → Web app → apiKey. It is public; it ships in every web app."),
+        field("Firebase project ID", input(model.firebase && model.firebase.projectId, function (v) { setFb("projectId", v); }, { placeholder: "patro-12345" }),
+          "Same place → projectId. Leave both empty to hide contact sync.")
       ]));
+      function setFb(k, v) {
+        model.firebase = model.firebase || {};
+        model.firebase[k] = v.trim();
+        changed();
+      }
     }
   };
 

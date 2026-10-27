@@ -268,6 +268,28 @@
     $("profile-sheet").hidden = false;
   }
 
+  // The round button in the header: the photo, else the name's first
+  // letter, else a person outline when nobody is signed in.
+  function renderAvatar() {
+    var btn = $("avatar-btn");
+    var user = UI.state.user;
+    UI.clear(btn);
+    btn.setAttribute("aria-label", user ? t("profileTitle") : t("signIn"));
+    if (user && profile.photo) {
+      var img = el("img");
+      img.src = profile.photo;
+      img.alt = "";
+      btn.appendChild(img);
+      return;
+    }
+    var name = (user && (profile.name || user.name)) || "";
+    if (name) {
+      btn.textContent = name.trim().charAt(0).toUpperCase();
+      return;
+    }
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.4 0-8 2.2-8 5v2h16v-2c0-2.8-3.6-5-8-5Z"/></svg>';
+  }
+
   function close() {
     if ($("profile-sheet").hidden) return false;
     $("profile-sheet").hidden = true;
@@ -276,6 +298,10 @@
 
   function init() {
     load();
+    renderAvatar();
+    $("avatar-btn").addEventListener("click", open);
+    UI.on("profile", renderAvatar);
+    UI.on("lang", renderAvatar);
     $("profile-form").addEventListener("submit", submit);
     $("profile-sheet").addEventListener("click", function (e) {
       if (e.target === $("profile-sheet")) close();

@@ -18,6 +18,8 @@ test("the published config and events files are valid", () => {
   // Members-only features must not lock everyone out while no sign-in is set up.
   const noLogin = Config.parseConfig({ login: {}, membersOnly: ["rashifalPeriods"] });
   assert.equal(Config.isLocked("rashifalPeriods", noLogin, null), false);
+  // ...but the Android app's own Google sign-in needs no key, so there it stays locked.
+  assert.equal(Config.isLocked("rashifalPeriods", noLogin, null, true), true);
   assert.equal(Custom.parseEvents(read("events.json")).skipped, 0);
 });
 
@@ -34,6 +36,9 @@ test("config keeps only well-formed login keys and known features", () => {
   assert.equal(Config.isLocked("notes", c, null), true);
   assert.equal(Config.isLocked("notes", c, { id: "x" }), false);
   assert.equal(Config.isLocked("newsSave", c, null), false);
+  const fb = Config.parseConfig({ firebase: { apiKey: "AIza" + "a".repeat(35), projectId: "patro-1234" } }).firebase;
+  assert.deepEqual(fb, { apiKey: "AIza" + "a".repeat(35), projectId: "patro-1234" });
+  assert.equal(Config.parseConfig({ firebase: { apiKey: "nope", projectId: "patro-1234" } }).firebase.apiKey, null);
 });
 
 test("admin events are checked, and yearly ones repeat", () => {
